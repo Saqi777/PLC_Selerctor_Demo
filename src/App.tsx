@@ -72,15 +72,23 @@ export default function App() {
 
   const handleAdminCommand = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminCommand.startsWith("进入管理员模式：")) {
-      const pwd = adminCommand.replace("进入管理员模式：", "").trim();
-      if (pwd === "admin123") {
-        setAdminMode(true);
-        setAdminPassword(pwd);
-        fetchAllProducts();
-      } else {
-        alert("密码错误");
-      }
+    const cmd = adminCommand.trim();
+    
+    // Support both full command and direct password entry
+    let pwd = "";
+    if (cmd.startsWith("进入管理员模式：") || cmd.startsWith("进入管理员模式:")) {
+      pwd = cmd.replace("进入管理员模式：", "").replace("进入管理员模式:", "").trim();
+    } else if (cmd === "admin123") {
+      pwd = "admin123";
+    }
+
+    if (pwd === "admin123") {
+      setAdminMode(true);
+      setAdminPassword(pwd);
+      fetchAllProducts();
+    } else if (cmd !== "") {
+      // Only alert if they actually typed something that didn't match
+      alert("指令或密码错误");
     }
     setAdminCommand("");
   };
