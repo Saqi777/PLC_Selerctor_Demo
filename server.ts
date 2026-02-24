@@ -5,7 +5,7 @@ import path from "path";
 import fs from "fs";
 
 const db = new Database("products.db");
-const JSON_PATH = path.resolve("MPLC_Product_en.json");
+const JSON_PATH = path.resolve("public/MPLC_Product_en.json");
 
 // Initialize Database
 db.exec(`
@@ -42,7 +42,7 @@ function syncWithJson() {
   ];
 
   if (!fs.existsSync(JSON_PATH)) {
-    console.log("JSON file not found. Creating sample at MPLC_Product_en.json");
+    console.log("JSON file not found. Creating sample at public/MPLC_Product_en.json");
     fs.writeFileSync(JSON_PATH, JSON.stringify(sampleData, null, 2));
   }
 

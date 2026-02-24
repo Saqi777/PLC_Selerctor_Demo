@@ -139,10 +139,10 @@ export default function App() {
         body: JSON.stringify({ password: adminPassword }),
       });
       if (response.ok) {
-        alert("Database loaded from MPLC_Product_en.json");
+        alert("Database loaded from public/MPLC_Product_en.json");
         fetchAllProducts();
       } else {
-        alert("Load failed. Check if MPLC_Product_en.json exists in root.");
+        alert("Load failed. Check if MPLC_Product_en.json exists in public/.");
       }
     } catch (error) {
       console.error("Sync error:", error);
@@ -160,7 +160,7 @@ export default function App() {
         body: JSON.stringify({ password: adminPassword }),
       });
       if (response.ok) {
-        alert("Database saved to MPLC_Product_en.json");
+        alert("Database saved to public/MPLC_Product_en.json");
       } else {
         alert("Save failed.");
       }
@@ -385,7 +385,7 @@ export default function App() {
                 <div className="flex justify-between items-end">
                   <div>
                     <h2 className="font-serif italic text-3xl">Master Database</h2>
-                    <p className="text-xs opacity-50 mt-1">Full access to raw product parameters (Source: MPLC_Product_en.json)</p>
+                    <p className="text-xs opacity-50 mt-1">Full access to raw product parameters (Source: public/MPLC_Product_en.json)</p>
                   </div>
                   <div className="flex gap-2">
                     <button 
