@@ -3,10 +3,9 @@ import { createServer as createViteServer } from "vite";
 import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
-import * as XLSX from "xlsx";
 
 const db = new Database("products.db");
-const EXCEL_PATH = path.resolve("src/Product_List.xlsx");
+const JSON_PATH = path.resolve("MPLC_Product_en.json");
 
 // Initialize Database
 db.exec(`
@@ -17,7 +16,8 @@ db.exec(`
     aio INTEGER,
     serial_ports INTEGER,
     pulse_axes INTEGER,
-    ethercat_axes INTEGER,
+    ethercat_real_or_virtual_axes INTEGER,
+    ethercat_virtual_axes INTEGER,
     pulse_interp_linear BOOLEAN,
     pulse_interp_circular BOOLEAN,
     pulse_interp_fixed BOOLEAN,
@@ -29,46 +29,42 @@ db.exec(`
   )
 `);
 
-function syncWithExcel() {
-  console.log("Checking for Excel database at:", EXCEL_PATH);
+function syncWithJson() {
+  console.log("Checking for JSON database at:", JSON_PATH);
   
   const sampleData = [
-    { model: "AX-701", dio: 512, aio: 128, serial_ports: 2, pulse_axes: 4, ethercat_axes: 8, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 1, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 0, e_cam_axes: 4 },
-    { model: "AX-702", dio: 1024, aio: 128, serial_ports: 4, pulse_axes: 8, ethercat_axes: 16, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 1, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 1, e_cam_axes: 8 },
-    { model: "AX-703", dio: 2048, aio: 256, serial_ports: 6, pulse_axes: 8, ethercat_axes: 32, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 1, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 1, e_cam_axes: 16 },
-    { model: "BX-100", dio: 256, aio: 64, serial_ports: 1, pulse_axes: 2, ethercat_axes: 0, pulse_interp_linear: 1, pulse_interp_circular: 0, pulse_interp_fixed: 0, ethercat_interp_linear: 0, ethercat_interp_circular: 0, ethercat_interp_fixed: 0, ethercat_interp_spiral: 0, e_cam_axes: 0 },
-    { model: "CX-500", dio: 1024, aio: 256, serial_ports: 4, pulse_axes: 0, ethercat_axes: 16, pulse_interp_linear: 0, pulse_interp_circular: 0, pulse_interp_fixed: 0, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 1, e_cam_axes: 16 },
-    { model: "DX-200", dio: 512, aio: 128, serial_ports: 2, pulse_axes: 4, ethercat_axes: 4, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 0, ethercat_interp_linear: 1, ethercat_interp_circular: 0, ethercat_interp_fixed: 0, ethercat_interp_spiral: 0, e_cam_axes: 2 },
+    { model: "AX-701", dio: 512, aio: 128, serial_ports: 2, pulse_axes: 4, ethercat_real_or_virtual_axes: 8, ethercat_virtual_axes: 4, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 1, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 0, e_cam_axes: 4 },
+    { model: "AX-702", dio: 1024, aio: 128, serial_ports: 4, pulse_axes: 8, ethercat_real_or_virtual_axes: 16, ethercat_virtual_axes: 8, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 1, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 1, e_cam_axes: 8 },
+    { model: "AX-703", dio: 2048, aio: 256, serial_ports: 6, pulse_axes: 8, ethercat_real_or_virtual_axes: 32, ethercat_virtual_axes: 16, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 1, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 1, e_cam_axes: 16 },
+    { model: "BX-100", dio: 256, aio: 64, serial_ports: 1, pulse_axes: 2, ethercat_real_or_virtual_axes: 0, ethercat_virtual_axes: 0, pulse_interp_linear: 1, pulse_interp_circular: 0, pulse_interp_fixed: 0, ethercat_interp_linear: 0, ethercat_interp_circular: 0, ethercat_interp_fixed: 0, ethercat_interp_spiral: 0, e_cam_axes: 0 },
+    { model: "CX-500", dio: 1024, aio: 256, serial_ports: 4, pulse_axes: 0, ethercat_real_or_virtual_axes: 16, ethercat_virtual_axes: 8, pulse_interp_linear: 0, pulse_interp_circular: 0, pulse_interp_fixed: 0, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 1, e_cam_axes: 16 },
+    { model: "DX-200", dio: 512, aio: 128, serial_ports: 2, pulse_axes: 4, ethercat_real_or_virtual_axes: 4, ethercat_virtual_axes: 2, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 0, ethercat_interp_linear: 1, ethercat_interp_circular: 0, ethercat_interp_fixed: 0, ethercat_interp_spiral: 0, e_cam_axes: 2 },
   ];
 
-  if (!fs.existsSync(EXCEL_PATH)) {
-    console.log("Excel file not found. Creating sample at src/Product_List.xlsx");
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(sampleData);
-    XLSX.utils.book_append_sheet(wb, ws, "Products");
-    XLSX.writeFile(wb, EXCEL_PATH);
+  if (!fs.existsSync(JSON_PATH)) {
+    console.log("JSON file not found. Creating sample at MPLC_Product_en.json");
+    fs.writeFileSync(JSON_PATH, JSON.stringify(sampleData, null, 2));
   }
 
   try {
-    const workbook = XLSX.readFile(EXCEL_PATH);
-    const sheetName = workbook.SheetNames[0];
-    const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]) as any[];
+    const data = JSON.parse(fs.readFileSync(JSON_PATH, "utf-8")) as any[];
 
     const deleteStmt = db.prepare("DELETE FROM products");
     const insert = db.prepare(`
       INSERT INTO products (
-        model, dio, aio, serial_ports, pulse_axes, ethercat_axes, 
+        model, dio, aio, serial_ports, pulse_axes, ethercat_real_or_virtual_axes, ethercat_virtual_axes,
         pulse_interp_linear, pulse_interp_circular, pulse_interp_fixed,
         ethercat_interp_linear, ethercat_interp_circular, ethercat_interp_fixed, ethercat_interp_spiral,
         e_cam_axes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const transaction = db.transaction((rows) => {
       deleteStmt.run();
       for (const row of rows) {
         insert.run(
-          row.model, row.dio, row.aio, row.serial_ports, row.pulse_axes, row.ethercat_axes,
+          row.model, row.dio, row.aio, row.serial_ports, row.pulse_axes, 
+          row.ethercat_real_or_virtual_axes, row.ethercat_virtual_axes,
           row.pulse_interp_linear ? 1 : 0, row.pulse_interp_circular ? 1 : 0, row.pulse_interp_fixed ? 1 : 0,
           row.ethercat_interp_linear ? 1 : 0, row.ethercat_interp_circular ? 1 : 0, row.ethercat_interp_fixed ? 1 : 0, row.ethercat_interp_spiral ? 1 : 0,
           row.e_cam_axes
@@ -77,14 +73,14 @@ function syncWithExcel() {
     });
 
     transaction(data);
-    console.log(`Successfully synced ${data.length} products from Excel.`);
+    console.log(`Successfully synced ${data.length} products from JSON.`);
   } catch (error) {
-    console.error("Error syncing with Excel:", error);
+    console.error("Error syncing with JSON:", error);
   }
 }
 
 // Initial sync
-syncWithExcel();
+syncWithJson();
 
 async function startServer() {
   const app = express();
@@ -114,9 +110,13 @@ async function startServer() {
       query += " AND pulse_axes >= ?";
       params.push(filters.pulse_axes);
     }
-    if (filters.ethercat_axes !== undefined) {
-      query += " AND ethercat_axes >= ?";
-      params.push(filters.ethercat_axes);
+    if (filters.ethercat_real_or_virtual_axes !== undefined) {
+      query += " AND ethercat_real_or_virtual_axes >= ?";
+      params.push(filters.ethercat_real_or_virtual_axes);
+    }
+    if (filters.ethercat_virtual_axes !== undefined) {
+      query += " AND ethercat_virtual_axes >= ?";
+      params.push(filters.ethercat_virtual_axes);
     }
     if (filters.e_cam_axes !== undefined) {
       query += " AND e_cam_axes >= ?";
@@ -152,7 +152,7 @@ async function startServer() {
     if (password !== "admin123") {
       return res.status(403).json({ error: "Invalid password" });
     }
-    syncWithExcel();
+    syncWithJson();
     res.json({ success: true });
   });
 

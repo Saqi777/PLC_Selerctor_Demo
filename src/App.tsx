@@ -31,7 +31,8 @@ export default function App() {
     aio: "",
     serial_ports: 0,
     pulse_axes: 0,
-    ethercat_axes: 0,
+    ethercat_real_or_virtual_axes: 0,
+    ethercat_virtual_axes: 0,
     pulse_interp_linear: false,
     pulse_interp_circular: false,
     pulse_interp_fixed: false,
@@ -112,10 +113,10 @@ export default function App() {
         body: JSON.stringify({ password: adminPassword }),
       });
       if (response.ok) {
-        alert("Database synced with src/Product_List.xlsx");
+        alert("Database synced with MPLC_Product_en.json");
         fetchAllProducts();
       } else {
-        alert("Sync failed. Check if file exists in src/");
+        alert("Sync failed. Check if MPLC_Product_en.json exists in root.");
       }
     } catch (error) {
       console.error("Sync error:", error);
@@ -202,10 +203,17 @@ export default function App() {
                 icon={<Activity size={14} />}
               />
               <RangeInput 
-                label="EtherCAT Axes" 
-                value={filters.ethercat_axes} 
+                label="EtherCAT实轴或虚轴" 
+                value={filters.ethercat_real_or_virtual_axes} 
                 max={16} 
-                onChange={(v) => handleFilterChange('ethercat_axes', v)} 
+                onChange={(v) => handleFilterChange('ethercat_real_or_virtual_axes', v)} 
+                icon={<Zap size={14} />}
+              />
+              <RangeInput 
+                label="EtherCAT虚拟轴" 
+                value={filters.ethercat_virtual_axes} 
+                max={16} 
+                onChange={(v) => handleFilterChange('ethercat_virtual_axes', v)} 
                 icon={<Zap size={14} />}
               />
               <RangeInput 
@@ -290,14 +298,14 @@ export default function App() {
                 <div className="flex justify-between items-end">
                   <div>
                     <h2 className="font-serif italic text-3xl">Master Database</h2>
-                    <p className="text-xs opacity-50 mt-1">Full access to raw product parameters (Source: src/Product_List.xlsx)</p>
+                    <p className="text-xs opacity-50 mt-1">Full access to raw product parameters (Source: MPLC_Product_en.json)</p>
                   </div>
                   <button 
                     onClick={handleSync}
                     disabled={loading}
                     className="flex items-center gap-2 bg-[#141414] text-[#E4E3E0] px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all disabled:opacity-50"
                   >
-                    <FileSpreadsheet size={16} /> {loading ? "Syncing..." : "Sync with Excel"}
+                    <FileSpreadsheet size={16} /> {loading ? "Syncing..." : "Sync with JSON"}
                   </button>
                 </div>
                 <ProductTable products={allProducts} />
@@ -330,7 +338,8 @@ export default function App() {
                       <div className="space-y-1 text-xs font-mono opacity-70 group-hover:opacity-100">
                         <div className="flex justify-between"><span>DIO:</span> <span>{product.dio}</span></div>
                         <div className="flex justify-between"><span>AIO:</span> <span>{product.aio}</span></div>
-                        <div className="flex justify-between"><span>EtherCAT:</span> <span>{product.ethercat_axes} Axes</span></div>
+                        <div className="flex justify-between"><span>EtherCAT实/虚:</span> <span>{product.ethercat_real_or_virtual_axes} Axes</span></div>
+                        <div className="flex justify-between"><span>EtherCAT虚拟:</span> <span>{product.ethercat_virtual_axes} Axes</span></div>
                       </div>
                     </div>
                   ))}
@@ -408,7 +417,8 @@ function ProductTable({ products }: { products: Product[] }) {
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">AIO</th>
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">Serial</th>
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">Pulse</th>
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">EtherCAT</th>
+            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">EtherCAT实/虚</th>
+            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">EtherCAT虚拟</th>
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">E-CAM</th>
             <th className="p-4 font-serif italic text-xs font-normal">Interpolation Support</th>
           </tr>
@@ -421,7 +431,8 @@ function ProductTable({ products }: { products: Product[] }) {
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.aio}</td>
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.serial_ports}</td>
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.pulse_axes}</td>
-              <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.ethercat_axes}</td>
+              <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.ethercat_real_or_virtual_axes}</td>
+              <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.ethercat_virtual_axes}</td>
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.e_cam_axes}</td>
               <td className="p-4">
                 <div className="flex flex-wrap gap-1">

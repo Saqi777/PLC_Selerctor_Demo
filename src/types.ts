@@ -5,7 +5,8 @@ export interface Product {
   aio: number;
   serial_ports: number;
   pulse_axes: number;
-  ethercat_axes: number;
+  ethercat_real_or_virtual_axes: number;
+  ethercat_virtual_axes: number;
   pulse_interp_linear: boolean;
   pulse_interp_circular: boolean;
   pulse_interp_fixed: boolean;
@@ -21,7 +22,8 @@ export interface FilterState {
   aio: number | "";
   serial_ports: number;
   pulse_axes: number;
-  ethercat_axes: number;
+  ethercat_real_or_virtual_axes: number;
+  ethercat_virtual_axes: number;
   pulse_interp_linear: boolean;
   pulse_interp_circular: boolean;
   pulse_interp_fixed: boolean;
