@@ -49,6 +49,24 @@ export default function App() {
   const [adminPassword, setAdminPassword] = useState("");
   const [adminCommand, setAdminCommand] = useState("");
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newProduct, setNewProduct] = useState<Partial<Product>>({
+    model: "",
+    dio: 0,
+    aio: 0,
+    serial_ports: 0,
+    pulse_axes: 0,
+    ethercat_real_or_virtual_axes: 0,
+    ethercat_virtual_axes: 0,
+    pulse_interp_linear: false,
+    pulse_interp_circular: false,
+    pulse_interp_fixed: false,
+    ethercat_interp_linear: false,
+    ethercat_interp_circular: false,
+    ethercat_interp_fixed: false,
+    ethercat_interp_spiral: false,
+    e_cam_axes: 0,
+  });
 
   const handleFilterChange = (key: keyof FilterState, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -79,11 +97,19 @@ export default function App() {
     let pwd = "";
     if (cmd.startsWith("进入管理员模式：") || cmd.startsWith("进入管理员模式:")) {
       pwd = cmd.replace("进入管理员模式：", "").replace("进入管理员模式:", "").trim();
-    } else if (cmd === "admin123") {
-      pwd = "admin123";
+    } else if (cmd === "hanadmin123") {
+      pwd = "hanadmin123";
     }
 
-    if (pwd === "admin123") {
+    // Exit command
+    if (cmd === "hanadmin321" || cmd === "退出管理员模式:hanadmin321" || cmd === "退出管理员模式：hanadmin321") {
+      setAdminMode(false);
+      setAdminPassword("");
+      setAdminCommand("");
+      return;
+    }
+
+    if (pwd === "hanadmin123") {
       setAdminMode(true);
       setAdminPassword(pwd);
       fetchAllProducts();
@@ -113,13 +139,74 @@ export default function App() {
         body: JSON.stringify({ password: adminPassword }),
       });
       if (response.ok) {
-        alert("Database synced with MPLC_Product_en.json");
+        alert("Database loaded from MPLC_Product_en.json");
         fetchAllProducts();
       } else {
-        alert("Sync failed. Check if MPLC_Product_en.json exists in root.");
+        alert("Load failed. Check if MPLC_Product_en.json exists in root.");
       }
     } catch (error) {
       console.error("Sync error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveToJson = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword }),
+      });
+      if (response.ok) {
+        alert("Database saved to MPLC_Product_en.json");
+      } else {
+        alert("Save failed.");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, product: newProduct }),
+      });
+      if (response.ok) {
+        alert("Product added successfully");
+        setShowAddModal(false);
+        fetchAllProducts();
+        setNewProduct({
+          model: "",
+          dio: 0,
+          aio: 0,
+          serial_ports: 0,
+          pulse_axes: 0,
+          ethercat_real_or_virtual_axes: 0,
+          ethercat_virtual_axes: 0,
+          pulse_interp_linear: false,
+          pulse_interp_circular: false,
+          pulse_interp_fixed: false,
+          ethercat_interp_linear: false,
+          ethercat_interp_circular: false,
+          ethercat_interp_fixed: false,
+          ethercat_interp_spiral: false,
+          e_cam_axes: 0,
+        });
+      } else {
+        const err = await response.json();
+        alert("Failed to add product: " + err.error);
+      }
+    } catch (error) {
+      console.error("Add error:", error);
     } finally {
       setLoading(false);
     }
@@ -203,14 +290,14 @@ export default function App() {
                 icon={<Activity size={14} />}
               />
               <RangeInput 
-                label="EtherCAT实轴或虚轴" 
+                label="EtherCAT Real/Virtual Axes" 
                 value={filters.ethercat_real_or_virtual_axes} 
                 max={16} 
                 onChange={(v) => handleFilterChange('ethercat_real_or_virtual_axes', v)} 
                 icon={<Zap size={14} />}
               />
               <RangeInput 
-                label="EtherCAT虚拟轴" 
+                label="EtherCAT Virtual Axes" 
                 value={filters.ethercat_virtual_axes} 
                 max={16} 
                 onChange={(v) => handleFilterChange('ethercat_virtual_axes', v)} 
@@ -300,15 +387,173 @@ export default function App() {
                     <h2 className="font-serif italic text-3xl">Master Database</h2>
                     <p className="text-xs opacity-50 mt-1">Full access to raw product parameters (Source: MPLC_Product_en.json)</p>
                   </div>
-                  <button 
-                    onClick={handleSync}
-                    disabled={loading}
-                    className="flex items-center gap-2 bg-[#141414] text-[#E4E3E0] px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all disabled:opacity-50"
-                  >
-                    <FileSpreadsheet size={16} /> {loading ? "Syncing..." : "Sync with JSON"}
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setShowAddModal(true)}
+                      className="flex items-center gap-2 bg-[#141414] text-[#E4E3E0] px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all"
+                    >
+                      <Cpu size={14} /> Add Product
+                    </button>
+                    <button 
+                      onClick={handleSync}
+                      disabled={loading}
+                      className="flex items-center gap-2 bg-[#141414] text-[#E4E3E0] px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all disabled:opacity-50"
+                    >
+                      <FileSpreadsheet size={14} /> Load from JSON
+                    </button>
+                    <button 
+                      onClick={handleSaveToJson}
+                      disabled={loading}
+                      className="flex items-center gap-2 bg-[#141414] text-[#E4E3E0] px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all disabled:opacity-50"
+                    >
+                      <FileSpreadsheet size={14} /> Save to JSON
+                    </button>
+                  </div>
                 </div>
                 <ProductTable products={allProducts} />
+
+                {/* Add Product Modal */}
+                <AnimatePresence>
+                  {showAddModal && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 bg-[#141414]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+                    >
+                      <motion.div 
+                        initial={{ scale: 0.95, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.95, opacity: 0 }}
+                        className="bg-[#E4E3E0] border border-[#141414] p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                      >
+                        <div className="flex justify-between items-center mb-6">
+                          <h2 className="font-serif italic text-2xl">Add New Product</h2>
+                          <button onClick={() => setShowAddModal(false)} className="opacity-50 hover:opacity-100">✕</button>
+                        </div>
+                        <form onSubmit={handleAddProduct} className="space-y-6">
+                          <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase font-bold opacity-50">Model Name</label>
+                              <input 
+                                required
+                                type="text" 
+                                value={newProduct.model}
+                                onChange={(e) => setNewProduct({...newProduct, model: e.target.value})}
+                                className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase font-bold opacity-50">DIO Count</label>
+                              <input 
+                                type="number" 
+                                value={newProduct.dio}
+                                onChange={(e) => setNewProduct({...newProduct, dio: Number(e.target.value)})}
+                                className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase font-bold opacity-50">AIO Count</label>
+                              <input 
+                                type="number" 
+                                value={newProduct.aio}
+                                onChange={(e) => setNewProduct({...newProduct, aio: Number(e.target.value)})}
+                                className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase font-bold opacity-50">Serial Ports</label>
+                              <input 
+                                type="number" 
+                                value={newProduct.serial_ports}
+                                onChange={(e) => setNewProduct({...newProduct, serial_ports: Number(e.target.value)})}
+                                className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase font-bold opacity-50">Pulse Axes</label>
+                              <input 
+                                type="number" 
+                                value={newProduct.pulse_axes}
+                                onChange={(e) => setNewProduct({...newProduct, pulse_axes: Number(e.target.value)})}
+                                className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase font-bold opacity-50">ECAT Real/Virtual Axes</label>
+                              <input 
+                                type="number" 
+                                value={newProduct.ethercat_real_or_virtual_axes}
+                                onChange={(e) => setNewProduct({...newProduct, ethercat_real_or_virtual_axes: Number(e.target.value)})}
+                                className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase font-bold opacity-50">ECAT Virtual Axes</label>
+                              <input 
+                                type="number" 
+                                value={newProduct.ethercat_virtual_axes}
+                                onChange={(e) => setNewProduct({...newProduct, ethercat_virtual_axes: Number(e.target.value)})}
+                                className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase font-bold opacity-50">E-CAM Axes</label>
+                              <input 
+                                type="number" 
+                                value={newProduct.e_cam_axes}
+                                onChange={(e) => setNewProduct({...newProduct, e_cam_axes: Number(e.target.value)})}
+                                className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <label className="text-[10px] uppercase font-bold opacity-50 block">Features Support</label>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked={newProduct.pulse_interp_linear} onChange={(e) => setNewProduct({...newProduct, pulse_interp_linear: e.target.checked})} />
+                                <span className="text-xs">Pulse Linear Interp</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked={newProduct.pulse_interp_circular} onChange={(e) => setNewProduct({...newProduct, pulse_interp_circular: e.target.checked})} />
+                                <span className="text-xs">Pulse Circular Interp</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked={newProduct.pulse_interp_fixed} onChange={(e) => setNewProduct({...newProduct, pulse_interp_fixed: e.target.checked})} />
+                                <span className="text-xs">Pulse Fixed L/A</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked={newProduct.ethercat_interp_linear} onChange={(e) => setNewProduct({...newProduct, ethercat_interp_linear: e.target.checked})} />
+                                <span className="text-xs">ECAT Linear Interp</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked={newProduct.ethercat_interp_circular} onChange={(e) => setNewProduct({...newProduct, ethercat_interp_circular: e.target.checked})} />
+                                <span className="text-xs">ECAT Circular Interp</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked={newProduct.ethercat_interp_fixed} onChange={(e) => setNewProduct({...newProduct, ethercat_interp_fixed: e.target.checked})} />
+                                <span className="text-xs">ECAT Fixed L/A</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked={newProduct.ethercat_interp_spiral} onChange={(e) => setNewProduct({...newProduct, ethercat_interp_spiral: e.target.checked})} />
+                                <span className="text-xs">EtherCAT SPIRAL</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <button 
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-[#141414] text-[#E4E3E0] py-4 font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all disabled:opacity-50"
+                          >
+                            {loading ? "Adding..." : "Add Product to Database"}
+                          </button>
+                        </form>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ) : results.length > 0 ? (
               <motion.div 
@@ -338,8 +583,8 @@ export default function App() {
                       <div className="space-y-1 text-xs font-mono opacity-70 group-hover:opacity-100">
                         <div className="flex justify-between"><span>DIO:</span> <span>{product.dio}</span></div>
                         <div className="flex justify-between"><span>AIO:</span> <span>{product.aio}</span></div>
-                        <div className="flex justify-between"><span>EtherCAT实/虚:</span> <span>{product.ethercat_real_or_virtual_axes} Axes</span></div>
-                        <div className="flex justify-between"><span>EtherCAT虚拟:</span> <span>{product.ethercat_virtual_axes} Axes</span></div>
+                        <div className="flex justify-between"><span>ECAT Real/Virtual:</span> <span>{product.ethercat_real_or_virtual_axes} Axes</span></div>
+                        <div className="flex justify-between"><span>ECAT Virtual:</span> <span>{product.ethercat_virtual_axes} Axes</span></div>
                       </div>
                     </div>
                   ))}
@@ -417,8 +662,8 @@ function ProductTable({ products }: { products: Product[] }) {
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">AIO</th>
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">Serial</th>
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">Pulse</th>
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">EtherCAT实/虚</th>
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">EtherCAT虚拟</th>
+            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">ECAT Real/Virtual</th>
+            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">ECAT Virtual</th>
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">E-CAM</th>
             <th className="p-4 font-serif italic text-xs font-normal">Interpolation Support</th>
           </tr>

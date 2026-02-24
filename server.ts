@@ -115,8 +115,10 @@ async function startServer() {
       params.push(filters.ethercat_real_or_virtual_axes);
     }
     if (filters.ethercat_virtual_axes !== undefined) {
-      query += " AND ethercat_virtual_axes >= ?";
-      params.push(filters.ethercat_virtual_axes);
+      // Logic: (prod_rv - req_rv) + prod_v >= req_v
+      // Which is: prod_rv + prod_v >= req_rv + req_v
+      query += " AND (ethercat_real_or_virtual_axes + ethercat_virtual_axes) >= ?";
+      params.push((filters.ethercat_real_or_virtual_axes || 0) + (filters.ethercat_virtual_axes || 0));
     }
     if (filters.e_cam_axes !== undefined) {
       query += " AND e_cam_axes >= ?";
@@ -149,11 +151,55 @@ async function startServer() {
 
   app.post("/api/admin/sync", (req, res) => {
     const { password } = req.body;
-    if (password !== "admin123") {
+    if (password !== "hanadmin123") {
       return res.status(403).json({ error: "Invalid password" });
     }
     syncWithJson();
     res.json({ success: true });
+  });
+
+  app.post("/api/admin/save", (req, res) => {
+    const { password } = req.body;
+    if (password !== "hanadmin123") {
+      return res.status(403).json({ error: "Invalid password" });
+    }
+    try {
+      const results = db.prepare("SELECT * FROM products").all();
+      // Remove 'id' from the exported JSON to keep it clean
+      const cleanResults = results.map(({ id, ...rest }: any) => rest);
+      fs.writeFileSync(JSON_PATH, JSON.stringify(cleanResults, null, 2));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/admin/add", (req, res) => {
+    const { password, product } = req.body;
+    if (password !== "hanadmin123") {
+      return res.status(403).json({ error: "Invalid password" });
+    }
+    try {
+      const insert = db.prepare(`
+        INSERT INTO products (
+          model, dio, aio, serial_ports, pulse_axes, ethercat_real_or_virtual_axes, ethercat_virtual_axes,
+          pulse_interp_linear, pulse_interp_circular, pulse_interp_fixed,
+          ethercat_interp_linear, ethercat_interp_circular, ethercat_interp_fixed, ethercat_interp_spiral,
+          e_cam_axes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      insert.run(
+        product.model, product.dio, product.aio, product.serial_ports, product.pulse_axes, 
+        product.ethercat_real_or_virtual_axes, product.ethercat_virtual_axes,
+        product.pulse_interp_linear ? 1 : 0, product.pulse_interp_circular ? 1 : 0, product.pulse_interp_fixed ? 1 : 0,
+        product.ethercat_interp_linear ? 1 : 0, product.ethercat_interp_circular ? 1 : 0, product.ethercat_interp_fixed ? 1 : 0, product.ethercat_interp_spiral ? 1 : 0,
+        product.e_cam_axes
+      );
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
   });
 
   // Vite middleware for development
