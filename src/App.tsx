@@ -68,25 +68,74 @@ export default function App() {
     e_cam_axes: 0,
   });
 
+  // Load products from JSON on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const response = await fetch('/MPLC_Product_en.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // Add IDs if they don't exist
+        const dataWithIds = data.map((p: any, index: number) => ({
+          ...p,
+          id: p.id || index + 1,
+          // Convert 1/0 to boolean if necessary
+          pulse_interp_linear: !!p.pulse_interp_linear,
+          pulse_interp_circular: !!p.pulse_interp_circular,
+          pulse_interp_fixed: !!p.pulse_interp_fixed,
+          ethercat_interp_linear: !!p.ethercat_interp_linear,
+          ethercat_interp_circular: !!p.ethercat_interp_circular,
+          ethercat_interp_fixed: !!p.ethercat_interp_fixed,
+          ethercat_interp_spiral: !!p.ethercat_interp_spiral,
+        }));
+        setAllProducts(dataWithIds);
+      } catch (error) {
+        console.error("Failed to load product data:", error);
+      }
+    };
+    loadData();
+  }, []);
+
   const handleFilterChange = (key: keyof FilterState, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const executeSearch = async () => {
+  const executeSearch = () => {
     setLoading(true);
-    try {
-      const response = await fetch('/api/products/filter', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(filters),
+    // Simulate network delay for better UX
+    setTimeout(() => {
+      const filtered = allProducts.filter(p => {
+        if (filters.dio && p.dio < Number(filters.dio)) return false;
+        if (filters.aio && p.aio < Number(filters.aio)) return false;
+        if (filters.serial_ports !== undefined && p.serial_ports < filters.serial_ports) return false;
+        if (filters.pulse_axes !== undefined && p.pulse_axes < filters.pulse_axes) return false;
+        if (filters.ethercat_real_or_virtual_axes !== undefined && p.ethercat_real_or_virtual_axes < filters.ethercat_real_or_virtual_axes) return false;
+        
+        if (filters.ethercat_virtual_axes !== undefined) {
+          // Logic: prod_rv + prod_v >= req_rv + req_v
+          const prodTotal = (p.ethercat_real_or_virtual_axes || 0) + (p.ethercat_virtual_axes || 0);
+          const reqTotal = (filters.ethercat_real_or_virtual_axes || 0) + (filters.ethercat_virtual_axes || 0);
+          if (prodTotal < reqTotal) return false;
+        }
+
+        if (filters.e_cam_axes !== undefined && p.e_cam_axes < filters.e_cam_axes) return false;
+
+        // Interpolation
+        if (filters.pulse_interp_linear && !p.pulse_interp_linear) return false;
+        if (filters.pulse_interp_circular && !p.pulse_interp_circular) return false;
+        if (filters.pulse_interp_fixed && !p.pulse_interp_fixed) return false;
+        if (filters.ethercat_interp_linear && !p.ethercat_interp_linear) return false;
+        if (filters.ethercat_interp_circular && !p.ethercat_interp_circular) return false;
+        if (filters.ethercat_interp_fixed && !p.ethercat_interp_fixed) return false;
+        if (filters.ethercat_interp_spiral && !p.ethercat_interp_spiral) return false;
+
+        return true;
       });
-      const data = await response.json();
-      setResults(data);
-    } catch (error) {
-      console.error("Search failed:", error);
-    } finally {
+      setResults(filtered);
       setLoading(false);
-    }
+    }, 300);
   };
 
   const handleAdminCommand = (e: React.FormEvent) => {
@@ -112,7 +161,6 @@ export default function App() {
     if (pwd === "hanadmin123") {
       setAdminMode(true);
       setAdminPassword(pwd);
-      fetchAllProducts();
     } else if (cmd !== "") {
       // Only alert if they actually typed something that didn't match
       alert("指令或密码错误");
@@ -120,96 +168,44 @@ export default function App() {
     setAdminCommand("");
   };
 
-  const fetchAllProducts = async () => {
-    try {
-      const response = await fetch('/api/products/all');
-      const data = await response.json();
-      setAllProducts(data);
-    } catch (error) {
-      console.error("Failed to fetch all products:", error);
-    }
+  const handleSync = () => {
+    alert("In Vercel deployment, data is loaded statically from MPLC_Product_en.json. To update, please modify the JSON file in the repository.");
   };
 
-  const handleSync = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/admin/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: adminPassword }),
-      });
-      if (response.ok) {
-        alert("Database loaded from public/MPLC_Product_en.json");
-        fetchAllProducts();
-      } else {
-        alert("Load failed. Check if MPLC_Product_en.json exists in public/.");
-      }
-    } catch (error) {
-      console.error("Sync error:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handleSaveToJson = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allProducts, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "MPLC_Product_en.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    alert("JSON file generated. You can use this to update your repository.");
   };
 
-  const handleSaveToJson = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/admin/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: adminPassword }),
-      });
-      if (response.ok) {
-        alert("Database saved to public/MPLC_Product_en.json");
-      } else {
-        alert("Save failed.");
-      }
-    } catch (error) {
-      console.error("Save error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddProduct = async (e: React.FormEvent) => {
+  const handleAddProduct = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await fetch('/api/admin/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: adminPassword, product: newProduct }),
-      });
-      if (response.ok) {
-        alert("Product added successfully");
-        setShowAddModal(false);
-        fetchAllProducts();
-        setNewProduct({
-          model: "",
-          dio: 0,
-          aio: 0,
-          serial_ports: 0,
-          pulse_axes: 0,
-          ethercat_real_or_virtual_axes: 0,
-          ethercat_virtual_axes: 0,
-          pulse_interp_linear: false,
-          pulse_interp_circular: false,
-          pulse_interp_fixed: false,
-          ethercat_interp_linear: false,
-          ethercat_interp_circular: false,
-          ethercat_interp_fixed: false,
-          ethercat_interp_spiral: false,
-          e_cam_axes: 0,
-        });
-      } else {
-        const err = await response.json();
-        alert("Failed to add product: " + err.error);
-      }
-    } catch (error) {
-      console.error("Add error:", error);
-    } finally {
-      setLoading(false);
-    }
+    const productWithId = { ...newProduct, id: Date.now() } as Product;
+    setAllProducts(prev => [...prev, productWithId]);
+    alert("Product added to current session. To persist, use 'Save to JSON' and update the source file.");
+    setShowAddModal(false);
+    setNewProduct({
+      model: "",
+      dio: 0,
+      aio: 0,
+      serial_ports: 0,
+      pulse_axes: 0,
+      ethercat_real_or_virtual_axes: 0,
+      ethercat_virtual_axes: 0,
+      pulse_interp_linear: false,
+      pulse_interp_circular: false,
+      pulse_interp_fixed: false,
+      ethercat_interp_linear: false,
+      ethercat_interp_circular: false,
+      ethercat_interp_fixed: false,
+      ethercat_interp_spiral: false,
+      e_cam_axes: 0,
+    });
   };
 
   return (
