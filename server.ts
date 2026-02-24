@@ -3,8 +3,10 @@ import { createServer as createViteServer } from "vite";
 import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
+import * as XLSX from "xlsx";
 
 const db = new Database("products.db");
+const EXCEL_PATH = path.resolve("src/Product_List.xlsx");
 
 // Initialize Database
 db.exec(`
@@ -27,31 +29,62 @@ db.exec(`
   )
 `);
 
-// Seed data if empty
-const count = db.prepare("SELECT COUNT(*) as count FROM products").get() as { count: number };
-if (count.count === 0) {
-  const insert = db.prepare(`
-    INSERT INTO products (
-      model, dio, aio, serial_ports, pulse_axes, ethercat_axes, 
-      pulse_interp_linear, pulse_interp_circular, pulse_interp_fixed,
-      ethercat_interp_linear, ethercat_interp_circular, ethercat_interp_fixed, ethercat_interp_spiral,
-      e_cam_axes
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
+function syncWithExcel() {
+  console.log("Checking for Excel database at:", EXCEL_PATH);
+  
   const sampleData = [
-    ["AX-701", 512, 128, 2, 4, 8, 1, 1, 1, 1, 1, 1, 0, 4],
-    ["AX-702", 1024, 128, 4, 8, 16, 1, 1, 1, 1, 1, 1, 1, 8],
-    ["AX-703", 2048, 256, 6, 8, 32, 1, 1, 1, 1, 1, 1, 1, 16],
-    ["BX-100", 256, 64, 1, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-    ["CX-500", 1024, 256, 4, 0, 16, 0, 0, 0, 1, 1, 1, 1, 16],
-    ["DX-200", 512, 128, 2, 4, 4, 1, 1, 0, 1, 0, 0, 0, 2],
+    { model: "AX-701", dio: 512, aio: 128, serial_ports: 2, pulse_axes: 4, ethercat_axes: 8, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 1, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 0, e_cam_axes: 4 },
+    { model: "AX-702", dio: 1024, aio: 128, serial_ports: 4, pulse_axes: 8, ethercat_axes: 16, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 1, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 1, e_cam_axes: 8 },
+    { model: "AX-703", dio: 2048, aio: 256, serial_ports: 6, pulse_axes: 8, ethercat_axes: 32, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 1, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 1, e_cam_axes: 16 },
+    { model: "BX-100", dio: 256, aio: 64, serial_ports: 1, pulse_axes: 2, ethercat_axes: 0, pulse_interp_linear: 1, pulse_interp_circular: 0, pulse_interp_fixed: 0, ethercat_interp_linear: 0, ethercat_interp_circular: 0, ethercat_interp_fixed: 0, ethercat_interp_spiral: 0, e_cam_axes: 0 },
+    { model: "CX-500", dio: 1024, aio: 256, serial_ports: 4, pulse_axes: 0, ethercat_axes: 16, pulse_interp_linear: 0, pulse_interp_circular: 0, pulse_interp_fixed: 0, ethercat_interp_linear: 1, ethercat_interp_circular: 1, ethercat_interp_fixed: 1, ethercat_interp_spiral: 1, e_cam_axes: 16 },
+    { model: "DX-200", dio: 512, aio: 128, serial_ports: 2, pulse_axes: 4, ethercat_axes: 4, pulse_interp_linear: 1, pulse_interp_circular: 1, pulse_interp_fixed: 0, ethercat_interp_linear: 1, ethercat_interp_circular: 0, ethercat_interp_fixed: 0, ethercat_interp_spiral: 0, e_cam_axes: 2 },
   ];
 
-  for (const row of sampleData) {
-    insert.run(...row);
+  if (!fs.existsSync(EXCEL_PATH)) {
+    console.log("Excel file not found. Creating sample at src/Product_List.xlsx");
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(sampleData);
+    XLSX.utils.book_append_sheet(wb, ws, "Products");
+    XLSX.writeFile(wb, EXCEL_PATH);
+  }
+
+  try {
+    const workbook = XLSX.readFile(EXCEL_PATH);
+    const sheetName = workbook.SheetNames[0];
+    const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]) as any[];
+
+    const deleteStmt = db.prepare("DELETE FROM products");
+    const insert = db.prepare(`
+      INSERT INTO products (
+        model, dio, aio, serial_ports, pulse_axes, ethercat_axes, 
+        pulse_interp_linear, pulse_interp_circular, pulse_interp_fixed,
+        ethercat_interp_linear, ethercat_interp_circular, ethercat_interp_fixed, ethercat_interp_spiral,
+        e_cam_axes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const transaction = db.transaction((rows) => {
+      deleteStmt.run();
+      for (const row of rows) {
+        insert.run(
+          row.model, row.dio, row.aio, row.serial_ports, row.pulse_axes, row.ethercat_axes,
+          row.pulse_interp_linear ? 1 : 0, row.pulse_interp_circular ? 1 : 0, row.pulse_interp_fixed ? 1 : 0,
+          row.ethercat_interp_linear ? 1 : 0, row.ethercat_interp_circular ? 1 : 0, row.ethercat_interp_fixed ? 1 : 0, row.ethercat_interp_spiral ? 1 : 0,
+          row.e_cam_axes
+        );
+      }
+    });
+
+    transaction(data);
+    console.log(`Successfully synced ${data.length} products from Excel.`);
+  } catch (error) {
+    console.error("Error syncing with Excel:", error);
   }
 }
+
+// Initial sync
+syncWithExcel();
 
 async function startServer() {
   const app = express();
@@ -90,7 +123,7 @@ async function startServer() {
       params.push(filters.e_cam_axes);
     }
 
-    // Pulse Interpolation (AND logic: if selected, must support)
+    // Pulse Interpolation
     if (filters.pulse_interp_linear) query += " AND pulse_interp_linear = 1";
     if (filters.pulse_interp_circular) query += " AND pulse_interp_circular = 1";
     if (filters.pulse_interp_fixed) query += " AND pulse_interp_fixed = 1";
@@ -114,42 +147,13 @@ async function startServer() {
     res.json(results);
   });
 
-  app.post("/api/admin/upload", (req, res) => {
-    // In a real app, we'd use multer to handle file uploads and xlsx to parse.
-    // For this demo, we'll accept a JSON array of products to "update" the DB.
-    const { password, data } = req.body;
+  app.post("/api/admin/sync", (req, res) => {
+    const { password } = req.body;
     if (password !== "admin123") {
       return res.status(403).json({ error: "Invalid password" });
     }
-
-    try {
-      const deleteStmt = db.prepare("DELETE FROM products");
-      const insert = db.prepare(`
-        INSERT INTO products (
-          model, dio, aio, serial_ports, pulse_axes, ethercat_axes, 
-          pulse_interp_linear, pulse_interp_circular, pulse_interp_fixed,
-          ethercat_interp_linear, ethercat_interp_circular, ethercat_interp_fixed, ethercat_interp_spiral,
-          e_cam_axes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      const transaction = db.transaction((rows) => {
-        deleteStmt.run();
-        for (const row of rows) {
-          insert.run(
-            row.model, row.dio, row.aio, row.serial_ports, row.pulse_axes, row.ethercat_axes,
-            row.pulse_interp_linear ? 1 : 0, row.pulse_interp_circular ? 1 : 0, row.pulse_interp_fixed ? 1 : 0,
-            row.ethercat_interp_linear ? 1 : 0, row.ethercat_interp_circular ? 1 : 0, row.ethercat_interp_fixed ? 1 : 0, row.ethercat_interp_spiral ? 1 : 0,
-            row.e_cam_axes
-          );
-        }
-      });
-
-      transaction(data);
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
-    }
+    syncWithExcel();
+    res.json({ success: true });
   });
 
   // Vite middleware for development

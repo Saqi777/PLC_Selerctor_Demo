@@ -95,6 +95,27 @@ export default function App() {
     }
   };
 
+  const handleSync = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword }),
+      });
+      if (response.ok) {
+        alert("Database synced with src/Product_List.xlsx");
+        fetchAllProducts();
+      } else {
+        alert("Sync failed. Check if file exists in src/");
+      }
+    } catch (error) {
+      console.error("Sync error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#E4E3E0] text-[#141414] font-sans selection:bg-[#141414] selection:text-[#E4E3E0]">
       {/* Header */}
@@ -261,10 +282,14 @@ export default function App() {
                 <div className="flex justify-between items-end">
                   <div>
                     <h2 className="font-serif italic text-3xl">Master Database</h2>
-                    <p className="text-xs opacity-50 mt-1">Full access to raw product parameters</p>
+                    <p className="text-xs opacity-50 mt-1">Full access to raw product parameters (Source: src/Product_List.xlsx)</p>
                   </div>
-                  <button className="flex items-center gap-2 bg-[#141414] text-[#E4E3E0] px-6 py-2 text-xs font-bold uppercase tracking-widest">
-                    <FileSpreadsheet size={16} /> Upload New Table
+                  <button 
+                    onClick={handleSync}
+                    disabled={loading}
+                    className="flex items-center gap-2 bg-[#141414] text-[#E4E3E0] px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all disabled:opacity-50"
+                  >
+                    <FileSpreadsheet size={16} /> {loading ? "Syncing..." : "Sync with Excel"}
                   </button>
                 </div>
                 <ProductTable products={allProducts} />
