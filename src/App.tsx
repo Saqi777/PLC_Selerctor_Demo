@@ -66,6 +66,7 @@ export default function App() {
     ethercat_interp_fixed: false,
     ethercat_interp_spiral: false,
     e_cam_axes: 0,
+    hsc_points: 0,
   });
 
   // Load products from JSON on mount
@@ -73,9 +74,6 @@ export default function App() {
     const loadData = async () => {
       try {
         const response = await fetch('/MPLC_Product_en.json');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
         const data = await response.json();
         // Add IDs if they don't exist
         const dataWithIds = data.map((p: any, index: number) => ({
@@ -89,6 +87,7 @@ export default function App() {
           ethercat_interp_circular: !!p.ethercat_interp_circular,
           ethercat_interp_fixed: !!p.ethercat_interp_fixed,
           ethercat_interp_spiral: !!p.ethercat_interp_spiral,
+          hsc_points: p.hsc_points || 0,
         }));
         setAllProducts(dataWithIds);
       } catch (error) {
@@ -205,6 +204,7 @@ export default function App() {
       ethercat_interp_fixed: false,
       ethercat_interp_spiral: false,
       e_cam_axes: 0,
+      hsc_points: 0,
     });
   };
 
@@ -212,11 +212,34 @@ export default function App() {
     <div className="min-h-screen bg-[#E4E3E0] text-[#141414] font-sans selection:bg-[#141414] selection:text-[#E4E3E0]">
       {/* Header */}
       <header className="border-b border-[#141414] p-6 flex justify-between items-center">
-        <div>
-          <h1 className="font-serif italic text-3xl tracking-tight">PLC Selector Pro</h1>
-          <p className="text-[11px] uppercase tracking-widest opacity-50 mt-1">Industrial Control Selection System v2.4</p>
+        <div className="flex items-center gap-6">
+          <a href="https://www.fatek.com/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+            <img 
+              src="https://www.fatek.com/images/logo.png" 
+              alt="FATEK Logo" 
+              className="h-8 invert"
+              onError={(e) => {
+                // Fallback to text if logo fails to load
+                (e.target as HTMLImageElement).style.display = 'none';
+                (e.target as HTMLImageElement).parentElement!.innerHTML = '<span class="font-bold text-2xl tracking-tighter">FATEK</span>';
+              }}
+            />
+          </a>
+          <div className="h-10 w-[1px] bg-[#141414]/20" />
+          <div>
+            <h1 className="font-serif italic text-3xl tracking-tight">PLC Selector Pro</h1>
+            <p className="text-[11px] uppercase tracking-widest opacity-50 mt-1">Industrial Control Selection System v2.4</p>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
+          <a 
+            href="https://docs.google.com/spreadsheets/d/1JdLJxIjBiGuPtVtBH8CNRmlxwd6hz_AF0JzfUAWb0Go/edit?usp=sharing" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border border-[#141414] px-4 py-2 hover:bg-[#141414] hover:text-[#E4E3E0] transition-all"
+          >
+            <FileSpreadsheet size={14} /> MPLC Spec Table
+          </a>
           <form onSubmit={handleAdminCommand} className="relative">
             <input 
               type="text" 
@@ -502,6 +525,15 @@ export default function App() {
                                 className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
                               />
                             </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] uppercase font-bold opacity-50">HSC Points</label>
+                              <input 
+                                type="number" 
+                                value={newProduct.hsc_points}
+                                onChange={(e) => setNewProduct({...newProduct, hsc_points: Number(e.target.value)})}
+                                className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
+                              />
+                            </div>
                           </div>
 
                           <div className="space-y-4">
@@ -581,6 +613,7 @@ export default function App() {
                         <div className="flex justify-between"><span>AIO:</span> <span>{product.aio}</span></div>
                         <div className="flex justify-between"><span>ECAT Real/Virtual:</span> <span>{product.ethercat_real_or_virtual_axes} Axes</span></div>
                         <div className="flex justify-between"><span>ECAT Virtual:</span> <span>{product.ethercat_virtual_axes} Axes</span></div>
+                        <div className="flex justify-between"><span>HSC Points:</span> <span>{product.hsc_points}</span></div>
                       </div>
                     </div>
                   ))}
@@ -589,6 +622,19 @@ export default function App() {
                 <div className="pt-8">
                   <h3 className="text-[10px] uppercase font-bold opacity-50 tracking-widest mb-4">Detailed Parameter Comparison</h3>
                   <ProductTable products={results} />
+                  
+                  {/* Notes Section */}
+                  <div className="mt-8 p-6 border border-[#141414]/10 bg-white/20">
+                    <h4 className="text-[10px] uppercase font-bold opacity-50 tracking-widest mb-4 flex items-center gap-2">
+                      <AlertCircle size={14} /> Notes
+                    </h4>
+                    <ul className="space-y-2 text-[11px] opacity-70 leading-relaxed">
+                      <li>*1: MQ can expand an additional 8 points (4 axes) of high-speed counting or pulse output via 2 Plug-ins.</li>
+                      <li>*2: MQ can expand an additional 2 communication ports via 2 Plug-ins.</li>
+                      <li>*3: MQ only has 2 Plug-in expansion slots.</li>
+                      <li>*4: In ME/MS/MU models, half of the high-speed counters are dedicated for Motion use.</li>
+                    </ul>
+                  </div>
                 </div>
               </motion.div>
             ) : (
@@ -657,6 +703,7 @@ function ProductTable({ products }: { products: Product[] }) {
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">DIO</th>
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">AIO</th>
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">Serial</th>
+            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">HSC Points</th>
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">Pulse</th>
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">ECAT Real/Virtual</th>
             <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">ECAT Virtual</th>
@@ -671,6 +718,7 @@ function ProductTable({ products }: { products: Product[] }) {
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.dio}</td>
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.aio}</td>
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.serial_ports}</td>
+              <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.hsc_points}</td>
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.pulse_axes}</td>
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.ethercat_real_or_virtual_axes}</td>
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.ethercat_virtual_axes}</td>
@@ -679,8 +727,10 @@ function ProductTable({ products }: { products: Product[] }) {
                 <div className="flex flex-wrap gap-1">
                   {p.pulse_interp_linear && <StatusTag label="P-Linear" />}
                   {p.pulse_interp_circular && <StatusTag label="P-Circular" />}
+                  {p.pulse_interp_fixed && <StatusTag label="P-Fixed L/A" />}
                   {p.ethercat_interp_linear && <StatusTag label="E-Linear" variant="dark" />}
                   {p.ethercat_interp_circular && <StatusTag label="E-Circular" variant="dark" />}
+                  {p.ethercat_interp_fixed && <StatusTag label="E-Fixed L/A" variant="dark" />}
                   {p.ethercat_interp_spiral && <StatusTag label="E-Spiral" variant="dark" />}
                 </div>
               </td>

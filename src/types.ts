@@ -15,6 +15,7 @@ export interface Product {
   ethercat_interp_fixed: boolean;
   ethercat_interp_spiral: boolean;
   e_cam_axes: number;
+  hsc_points: number;
 }
 
 export interface FilterState {
