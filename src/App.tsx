@@ -227,7 +227,7 @@ export default function App() {
           </a>
           <div className="h-10 w-[1px] bg-[#141414]/20" />
           <div>
-            <h1 className="font-serif italic text-3xl tracking-tight">PLC Selector Pro</h1>
+            <h1 className="font-serif italic text-3xl tracking-tight">MPLC Selector</h1>
             <p className="text-[11px] uppercase tracking-widest opacity-50 mt-1">Industrial Control Selection System v2.4</p>
           </div>
         </div>

@@ -1,5 +1,5 @@
 {
-  "name": "PLC & Controller Selector Pro",
-  "description": "A professional selection tool for PLC and industrial controllers based on technical specifications and performance requirements.",
+  "name": "MPLC Selector",
+  "description": "A professional selection tool for MPLC and industrial controllers based on technical specifications and performance requirements.",
   "requestFramePermissions": []
 }
