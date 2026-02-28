@@ -563,7 +563,7 @@ export default function App() {
                   {results.map(product => (
                     <div key={product.id} className="border border-[#141414] p-6 bg-white/50 hover:bg-[#141414] hover:text-[#E4E3E0] transition-all group">
                       <div className="flex justify-between items-start mb-4">
-                        <h3 className="font-serif font-bold text-2xl">{product.model}</h3>
+                        <h3 className="font-bold text-2xl" style={{ fontFamily: '"PingFang SC", "Helvetica Neue", Arial, sans-serif' }}>{product.model}</h3>
                         <span className="text-[10px] font-mono border border-current px-2 py-0.5 rounded">PLC-UNIT</span>
                       </div>
                       <div className="space-y-1 text-xs font-mono opacity-70 group-hover:opacity-100">
@@ -672,7 +672,7 @@ function ProductTable({ products }: { products: Product[] }) {
         <tbody>
           {products.map((p, idx) => (
             <tr key={p.id} className={cn("border-b border-[#141414]", idx % 2 === 0 ? "bg-white/30" : "bg-transparent")}>
-              <td className="p-4 font-bold text-sm border-r border-[#141414]/10">{p.model}</td>
+              <td className="p-4 font-bold text-sm border-r border-[#141414]/10" style={{ fontFamily: '"PingFang SC", "Helvetica Neue", Arial, sans-serif' }}>{p.model}</td>
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.dio}</td>
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.aio}</td>
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.serial_ports}</td>
