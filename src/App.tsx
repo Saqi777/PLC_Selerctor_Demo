@@ -47,7 +47,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [adminMode, setAdminMode] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
-  const [adminCommand, setAdminCommand] = useState("");
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProduct, setNewProduct] = useState<Partial<Product>>({
@@ -137,36 +136,6 @@ export default function App() {
     }, 300);
   };
 
-  const handleAdminCommand = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cmd = adminCommand.trim();
-    
-    // Support both full command and direct password entry
-    let pwd = "";
-    if (cmd.startsWith("进入管理员模式：") || cmd.startsWith("进入管理员模式:")) {
-      pwd = cmd.replace("进入管理员模式：", "").replace("进入管理员模式:", "").trim();
-    } else if (cmd === "hanadmin123") {
-      pwd = "hanadmin123";
-    }
-
-    // Exit command
-    if (cmd === "hanadmin321" || cmd === "退出管理员模式:hanadmin321" || cmd === "退出管理员模式：hanadmin321") {
-      setAdminMode(false);
-      setAdminPassword("");
-      setAdminCommand("");
-      return;
-    }
-
-    if (pwd === "hanadmin123") {
-      setAdminMode(true);
-      setAdminPassword(pwd);
-    } else if (cmd !== "") {
-      // Only alert if they actually typed something that didn't match
-      alert("指令或密码错误");
-    }
-    setAdminCommand("");
-  };
-
   const handleSync = () => {
     alert("In Vercel deployment, data is loaded statically from MPLC_Product_en.json. To update, please modify the JSON file in the repository.");
   };
@@ -228,7 +197,10 @@ export default function App() {
           <div className="h-10 w-[1px] bg-[#141414]/20" />
           <div>
             <h1 className="font-serif italic text-3xl tracking-tight">MPLC Selector</h1>
-            <p className="text-[11px] uppercase tracking-widest opacity-50 mt-1">Industrial Control Selection System v2.4</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-[11px] uppercase tracking-widest opacity-50">Industrial Control Selection System v2.4</p>
+              <span className="text-[9px] font-mono opacity-30 tracking-tighter">260220</span>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-6">
@@ -240,20 +212,6 @@ export default function App() {
           >
             <FileSpreadsheet size={14} /> MPLC Spec Table
           </a>
-          <form onSubmit={handleAdminCommand} className="relative">
-            <input 
-              type="text" 
-              value={adminCommand}
-              onChange={(e) => setAdminCommand(e.target.value)}
-              placeholder="Command line..."
-              className="bg-transparent border border-[#141414]/20 rounded-full px-4 py-1 text-xs focus:outline-none focus:border-[#141414] w-48 transition-all"
-            />
-          </form>
-          {adminMode && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-[#141414] text-[#E4E3E0] rounded-full text-[10px] font-bold uppercase tracking-tighter">
-              <Lock size={12} /> Admin Active
-            </div>
-          )}
         </div>
       </header>
 
@@ -309,7 +267,7 @@ export default function App() {
                 icon={<Activity size={14} />}
               />
               <RangeInput 
-                label="EtherCAT Real/Virtual Axes" 
+                label="EtherCAT Real Axes" 
                 value={filters.ethercat_real_or_virtual_axes} 
                 max={16} 
                 onChange={(v) => handleFilterChange('ethercat_real_or_virtual_axes', v)} 
@@ -372,7 +330,7 @@ export default function App() {
                   onClick={() => handleFilterChange('ethercat_interp_fixed', !filters.ethercat_interp_fixed)} 
                 />
                 <ToggleButton 
-                  label="Spiral" 
+                  label="3D Arc & Helix" 
                   active={filters.ethercat_interp_spiral} 
                   onClick={() => handleFilterChange('ethercat_interp_spiral', !filters.ethercat_interp_spiral)} 
                 />
@@ -731,7 +689,7 @@ function ProductTable({ products }: { products: Product[] }) {
                   {p.ethercat_interp_linear && <StatusTag label="E-Linear" variant="dark" />}
                   {p.ethercat_interp_circular && <StatusTag label="E-Circular" variant="dark" />}
                   {p.ethercat_interp_fixed && <StatusTag label="E-Fixed L/A" variant="dark" />}
-                  {p.ethercat_interp_spiral && <StatusTag label="E-Spiral" variant="dark" />}
+                  {p.ethercat_interp_spiral && <StatusTag label="E-3D Arc & Helix" variant="dark" />}
                 </div>
               </td>
             </tr>
