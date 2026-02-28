@@ -196,7 +196,7 @@ export default function App() {
           </a>
           <div className="h-10 w-[1px] bg-[#141414]/20" />
           <div>
-            <h1 className="font-serif italic text-3xl tracking-tight">MPLC Selector</h1>
+            <h1 className="font-serif font-bold text-3xl tracking-tight">MPLC Selector</h1>
             <div className="flex items-center gap-2 mt-1">
               <p className="text-[11px] uppercase tracking-widest opacity-50">Industrial Control Selection System v2.4</p>
               <span className="text-[9px] font-mono opacity-30 tracking-tighter">260220</span>
@@ -220,7 +220,7 @@ export default function App() {
         <aside className="border-r border-[#141414] p-8 overflow-y-auto max-h-[calc(100vh-89px)]">
           <div className="flex items-center gap-2 mb-8">
             <Settings size={18} className="opacity-50" />
-            <h2 className="font-serif italic text-xl">Selection Parameters</h2>
+            <h2 className="font-serif font-bold text-xl">Selection Parameters</h2>
           </div>
 
           <div className="space-y-8">
@@ -361,7 +361,7 @@ export default function App() {
               >
                 <div className="flex justify-between items-end">
                   <div>
-                    <h2 className="font-serif italic text-3xl">Master Database</h2>
+                    <h2 className="font-serif font-bold text-3xl">Master Database</h2>
                     <p className="text-xs opacity-50 mt-1">Full access to raw product parameters (Source: public/MPLC_Product_en.json)</p>
                   </div>
                   <div className="flex gap-2">
@@ -405,7 +405,7 @@ export default function App() {
                         className="bg-[#E4E3E0] border border-[#141414] p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
                       >
                         <div className="flex justify-between items-center mb-6">
-                          <h2 className="font-serif italic text-2xl">Add New Product</h2>
+                          <h2 className="font-serif font-bold text-2xl">Add New Product</h2>
                           <button onClick={() => setShowAddModal(false)} className="opacity-50 hover:opacity-100">✕</button>
                         </div>
                         <form onSubmit={handleAddProduct} className="space-y-6">
@@ -554,7 +554,7 @@ export default function App() {
                     <CheckCircle2 size={24} />
                   </div>
                   <div>
-                    <h2 className="font-serif italic text-3xl">Match Results</h2>
+                    <h2 className="font-serif font-bold text-3xl">Match Results</h2>
                     <p className="text-xs opacity-50">Found {results.length} models matching your specifications</p>
                   </div>
                 </div>
@@ -563,7 +563,7 @@ export default function App() {
                   {results.map(product => (
                     <div key={product.id} className="border border-[#141414] p-6 bg-white/50 hover:bg-[#141414] hover:text-[#E4E3E0] transition-all group">
                       <div className="flex justify-between items-start mb-4">
-                        <h3 className="font-serif italic text-2xl">{product.model}</h3>
+                        <h3 className="font-serif font-bold text-2xl">{product.model}</h3>
                         <span className="text-[10px] font-mono border border-current px-2 py-0.5 rounded">PLC-UNIT</span>
                       </div>
                       <div className="space-y-1 text-xs font-mono opacity-70 group-hover:opacity-100">
@@ -603,7 +603,7 @@ export default function App() {
                 className="h-full flex flex-col items-center justify-center opacity-20 text-center"
               >
                 <Search size={80} strokeWidth={1} />
-                <p className="font-serif italic text-2xl mt-4">Awaiting parameters...</p>
+                <p className="font-serif font-bold text-2xl mt-4">Awaiting parameters...</p>
                 <p className="text-xs uppercase tracking-widest mt-2">Adjust filters to begin selection</p>
               </motion.div>
             )}
@@ -657,16 +657,16 @@ function ProductTable({ products }: { products: Product[] }) {
       <table className="w-full text-left border-collapse min-w-[800px]">
         <thead>
           <tr className="bg-[#141414] text-[#E4E3E0]">
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">Product Model</th>
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">DIO</th>
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">AIO</th>
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">Serial</th>
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">HSC Points</th>
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">Pulse</th>
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">ECAT Real/Virtual</th>
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">ECAT Virtual</th>
-            <th className="p-4 font-serif italic text-xs font-normal border-r border-[#E4E3E0]/20">E-CAM</th>
-            <th className="p-4 font-serif italic text-xs font-normal">Interpolation Support</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">Product Model</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">DIO</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">AIO</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">Serial</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">HSC Points</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">Pulse</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">ECAT Real/Virtual</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">ECAT Virtual</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">E-CAM</th>
+            <th className="p-4 font-serif font-bold text-xs">Interpolation Support</th>
           </tr>
         </thead>
         <tbody>
