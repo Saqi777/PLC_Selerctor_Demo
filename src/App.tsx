@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Product, FilterState } from './types';
+import { translations, Language } from './translations';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -49,6 +50,8 @@ export default function App() {
   const [adminPassword, setAdminPassword] = useState("");
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [language, setLanguage] = useState<Language | null>(null);
+  const [showLanguageModal, setShowLanguageModal] = useState(true);
   const [newProduct, setNewProduct] = useState<Partial<Product>>({
     model: "",
     dio: 0,
@@ -68,11 +71,14 @@ export default function App() {
     hsc_points: 0,
   });
 
-  // Load products from JSON on mount
+  // Load products from JSON on mount or language change
   useEffect(() => {
+    if (!language) return;
+    
     const loadData = async () => {
       try {
-        const response = await fetch('/MPLC_Product_en.json');
+        const fileName = language === 'en' ? '/MPLC_Product_en.json' : '/MPLC_Product_cn.json';
+        const response = await fetch(fileName);
         const data = await response.json();
         // Add IDs if they don't exist
         const dataWithIds = data.map((p: any, index: number) => ({
@@ -89,12 +95,16 @@ export default function App() {
           hsc_points: p.hsc_points || 0,
         }));
         setAllProducts(dataWithIds);
+        // Clear results when language changes to avoid stale data
+        setResults([]);
       } catch (error) {
         console.error("Failed to load product data:", error);
       }
     };
     loadData();
-  }, []);
+  }, [language]);
+
+  const t = translations[language || 'en'];
 
   const handleFilterChange = (key: keyof FilterState, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -196,21 +206,27 @@ export default function App() {
           </a>
           <div className="h-10 w-[1px] bg-[#141414]/20" />
           <div>
-            <h1 className="font-serif font-bold text-3xl tracking-tight">MPLC Selector</h1>
+            <h1 className="font-serif font-bold text-3xl tracking-tight">{t.title}</h1>
             <div className="flex items-center gap-2 mt-1">
-              <p className="text-[11px] uppercase tracking-widest opacity-50">Industrial Control Selection System v2.4</p>
+              <p className="text-[11px] uppercase tracking-widest opacity-50">{t.subtitle}</p>
               <span className="text-[9px] font-mono opacity-30 tracking-tighter">260220</span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-6">
+          <button 
+            onClick={() => setLanguage(language === 'en' ? 'cn' : 'en')}
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border border-[#141414] px-4 py-2 hover:bg-[#141414] hover:text-[#E4E3E0] transition-all"
+          >
+            {t.language}: {language === 'en' ? t.chinese : t.english}
+          </button>
           <a 
             href="https://docs.google.com/spreadsheets/d/1JdLJxIjBiGuPtVtBH8CNRmlxwd6hz_AF0JzfUAWb0Go/edit?usp=sharing" 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border border-[#141414] px-4 py-2 hover:bg-[#141414] hover:text-[#E4E3E0] transition-all"
           >
-            <FileSpreadsheet size={14} /> MPLC Spec Table
+            <FileSpreadsheet size={14} /> {t.specTable}
           </a>
         </div>
       </header>
@@ -220,31 +236,31 @@ export default function App() {
         <aside className="border-r border-[#141414] p-8 overflow-y-auto max-h-[calc(100vh-89px)]">
           <div className="flex items-center gap-2 mb-8">
             <Settings size={18} className="opacity-50" />
-            <h2 className="font-serif font-bold text-xl">Selection Parameters</h2>
+            <h2 className="font-serif font-bold text-xl">{t.selectionParameters}</h2>
           </div>
 
           <div className="space-y-8">
             {/* Numerical Selects */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">DIO Count (Min)</label>
+                <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">{t.dioCount}</label>
                 <select 
                   value={filters.dio} 
                   onChange={(e) => handleFilterChange('dio', e.target.value ? Number(e.target.value) : "")}
                   className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
                 >
-                  <option value="">Any</option>
+                  <option value="">{t.any}</option>
                   {DIO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">AIO Count (Min)</label>
+                <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">{t.aioCount}</label>
                 <select 
                   value={filters.aio} 
                   onChange={(e) => handleFilterChange('aio', e.target.value ? Number(e.target.value) : "")}
                   className="w-full bg-transparent border border-[#141414] p-2 text-sm focus:outline-none"
                 >
-                  <option value="">Any</option>
+                  <option value="">{t.any}</option>
                   {AIO_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
@@ -253,35 +269,35 @@ export default function App() {
             {/* Sliders */}
             <div className="space-y-6">
               <RangeInput 
-                label="Serial Ports" 
+                label={t.serialPorts} 
                 value={filters.serial_ports} 
                 max={14} 
                 onChange={(v) => handleFilterChange('serial_ports', v)} 
                 icon={<Network size={14} />}
               />
               <RangeInput 
-                label="Pulse Axes" 
+                label={t.pulseAxes} 
                 value={filters.pulse_axes} 
                 max={8} 
                 onChange={(v) => handleFilterChange('pulse_axes', v)} 
                 icon={<Activity size={14} />}
               />
               <RangeInput 
-                label="EtherCAT Real Axes" 
+                label={t.ethercatRealAxes} 
                 value={filters.ethercat_real_or_virtual_axes} 
                 max={16} 
                 onChange={(v) => handleFilterChange('ethercat_real_or_virtual_axes', v)} 
                 icon={<Zap size={14} />}
               />
               <RangeInput 
-                label="EtherCAT Virtual Axes" 
+                label={t.ethercatVirtualAxes} 
                 value={filters.ethercat_virtual_axes} 
                 max={16} 
                 onChange={(v) => handleFilterChange('ethercat_virtual_axes', v)} 
                 icon={<Zap size={14} />}
               />
               <RangeInput 
-                label="E-Cam Axes (EtherCAT)" 
+                label={t.ecamAxes} 
                 value={filters.e_cam_axes} 
                 max={16} 
                 onChange={(v) => handleFilterChange('e_cam_axes', v)} 
@@ -291,20 +307,20 @@ export default function App() {
 
             {/* Interpolation Toggles */}
             <div className="space-y-4">
-              <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">Pulse Interpolation</label>
+              <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">{t.pulseInterpolation}</label>
               <div className="flex flex-wrap gap-2">
                 <ToggleButton 
-                  label="Linear" 
+                  label={t.linear} 
                   active={filters.pulse_interp_linear} 
                   onClick={() => handleFilterChange('pulse_interp_linear', !filters.pulse_interp_linear)} 
                 />
                 <ToggleButton 
-                  label="Circular" 
+                  label={t.circular} 
                   active={filters.pulse_interp_circular} 
                   onClick={() => handleFilterChange('pulse_interp_circular', !filters.pulse_interp_circular)} 
                 />
                 <ToggleButton 
-                  label="Fixed L/A" 
+                  label={t.fixedLA} 
                   active={filters.pulse_interp_fixed} 
                   onClick={() => handleFilterChange('pulse_interp_fixed', !filters.pulse_interp_fixed)} 
                 />
@@ -312,25 +328,25 @@ export default function App() {
             </div>
 
             <div className="space-y-4">
-              <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">EtherCAT Interpolation</label>
+              <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">{t.ethercatInterpolation}</label>
               <div className="flex flex-wrap gap-2">
                 <ToggleButton 
-                  label="Linear" 
+                  label={t.linear} 
                   active={filters.ethercat_interp_linear} 
                   onClick={() => handleFilterChange('ethercat_interp_linear', !filters.ethercat_interp_linear)} 
                 />
                 <ToggleButton 
-                  label="Circular" 
+                  label={t.circular} 
                   active={filters.ethercat_interp_circular} 
                   onClick={() => handleFilterChange('ethercat_interp_circular', !filters.ethercat_interp_circular)} 
                 />
                 <ToggleButton 
-                  label="Fixed L/A" 
+                  label={t.fixedLA} 
                   active={filters.ethercat_interp_fixed} 
                   onClick={() => handleFilterChange('ethercat_interp_fixed', !filters.ethercat_interp_fixed)} 
                 />
                 <ToggleButton 
-                  label="3D Arc & Helix" 
+                  label={t.spiral} 
                   active={filters.ethercat_interp_spiral} 
                   onClick={() => handleFilterChange('ethercat_interp_spiral', !filters.ethercat_interp_spiral)} 
                 />
@@ -342,7 +358,7 @@ export default function App() {
               disabled={loading}
               className="w-full bg-[#141414] text-[#E4E3E0] py-4 font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#141414]/90 transition-all disabled:opacity-50"
             >
-              {loading ? "Processing..." : "Confirm Selection"}
+              {loading ? t.processing : t.confirmSelection}
               <ChevronRight size={18} />
             </button>
           </div>
@@ -361,33 +377,33 @@ export default function App() {
               >
                 <div className="flex justify-between items-end">
                   <div>
-                    <h2 className="font-serif font-bold text-3xl">Master Database</h2>
-                    <p className="text-xs opacity-50 mt-1">Full access to raw product parameters (Source: public/MPLC_Product_en.json)</p>
+                    <h2 className="font-serif font-bold text-3xl">{t.masterDatabase}</h2>
+                    <p className="text-xs opacity-50 mt-1">{t.fullAccess} (Source: public/MPLC_Product_{language}.json)</p>
                   </div>
                   <div className="flex gap-2">
                     <button 
                       onClick={() => setShowAddModal(true)}
                       className="flex items-center gap-2 bg-[#141414] text-[#E4E3E0] px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all"
                     >
-                      <Cpu size={14} /> Add Product
+                      <Cpu size={14} /> {t.addProduct}
                     </button>
                     <button 
                       onClick={handleSync}
                       disabled={loading}
                       className="flex items-center gap-2 bg-[#141414] text-[#E4E3E0] px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all disabled:opacity-50"
                     >
-                      <FileSpreadsheet size={14} /> Load from JSON
+                      <FileSpreadsheet size={14} /> {t.loadFromJson}
                     </button>
                     <button 
                       onClick={handleSaveToJson}
                       disabled={loading}
                       className="flex items-center gap-2 bg-[#141414] text-[#E4E3E0] px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all disabled:opacity-50"
                     >
-                      <FileSpreadsheet size={14} /> Save to JSON
+                      <FileSpreadsheet size={14} /> {t.saveToJson}
                     </button>
                   </div>
                 </div>
-                <ProductTable products={allProducts} />
+                <ProductTable products={allProducts} t={t} />
 
                 {/* Add Product Modal */}
                 <AnimatePresence>
@@ -405,13 +421,13 @@ export default function App() {
                         className="bg-[#E4E3E0] border border-[#141414] p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
                       >
                         <div className="flex justify-between items-center mb-6">
-                          <h2 className="font-serif font-bold text-2xl">Add New Product</h2>
+                          <h2 className="font-serif font-bold text-2xl">{t.addNewProduct}</h2>
                           <button onClick={() => setShowAddModal(false)} className="opacity-50 hover:opacity-100">✕</button>
                         </div>
                         <form onSubmit={handleAddProduct} className="space-y-6">
                           <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
-                              <label className="text-[10px] uppercase font-bold opacity-50">Model Name</label>
+                              <label className="text-[10px] uppercase font-bold opacity-50">{t.modelName}</label>
                               <input 
                                 required
                                 type="text" 
@@ -421,7 +437,7 @@ export default function App() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[10px] uppercase font-bold opacity-50">DIO Count</label>
+                              <label className="text-[10px] uppercase font-bold opacity-50">{t.dioCount}</label>
                               <input 
                                 type="number" 
                                 value={newProduct.dio}
@@ -430,7 +446,7 @@ export default function App() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[10px] uppercase font-bold opacity-50">AIO Count</label>
+                              <label className="text-[10px] uppercase font-bold opacity-50">{t.aioCount}</label>
                               <input 
                                 type="number" 
                                 value={newProduct.aio}
@@ -439,7 +455,7 @@ export default function App() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[10px] uppercase font-bold opacity-50">Serial Ports</label>
+                              <label className="text-[10px] uppercase font-bold opacity-50">{t.serialPorts}</label>
                               <input 
                                 type="number" 
                                 value={newProduct.serial_ports}
@@ -448,7 +464,7 @@ export default function App() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[10px] uppercase font-bold opacity-50">Pulse Axes</label>
+                              <label className="text-[10px] uppercase font-bold opacity-50">{t.pulseAxes}</label>
                               <input 
                                 type="number" 
                                 value={newProduct.pulse_axes}
@@ -457,7 +473,7 @@ export default function App() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[10px] uppercase font-bold opacity-50">ECAT Real/Virtual Axes</label>
+                              <label className="text-[10px] uppercase font-bold opacity-50">{t.ethercatRealAxes}</label>
                               <input 
                                 type="number" 
                                 value={newProduct.ethercat_real_or_virtual_axes}
@@ -466,7 +482,7 @@ export default function App() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[10px] uppercase font-bold opacity-50">ECAT Virtual Axes</label>
+                              <label className="text-[10px] uppercase font-bold opacity-50">{t.ethercatVirtualAxes}</label>
                               <input 
                                 type="number" 
                                 value={newProduct.ethercat_virtual_axes}
@@ -475,7 +491,7 @@ export default function App() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[10px] uppercase font-bold opacity-50">E-CAM Axes</label>
+                              <label className="text-[10px] uppercase font-bold opacity-50">{t.ecamAxes}</label>
                               <input 
                                 type="number" 
                                 value={newProduct.e_cam_axes}
@@ -484,7 +500,7 @@ export default function App() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[10px] uppercase font-bold opacity-50">HSC Points</label>
+                              <label className="text-[10px] uppercase font-bold opacity-50">{t.hscPoints}</label>
                               <input 
                                 type="number" 
                                 value={newProduct.hsc_points}
@@ -495,35 +511,35 @@ export default function App() {
                           </div>
 
                           <div className="space-y-4">
-                            <label className="text-[10px] uppercase font-bold opacity-50 block">Features Support</label>
+                            <label className="text-[10px] uppercase font-bold opacity-50 block">{t.featuresSupport}</label>
                             <div className="grid grid-cols-2 gap-4">
                               <div className="flex items-center gap-2">
                                 <input type="checkbox" checked={newProduct.pulse_interp_linear} onChange={(e) => setNewProduct({...newProduct, pulse_interp_linear: e.target.checked})} />
-                                <span className="text-xs">Pulse Linear Interp</span>
+                                <span className="text-xs">{t.pulseLinearInterp}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <input type="checkbox" checked={newProduct.pulse_interp_circular} onChange={(e) => setNewProduct({...newProduct, pulse_interp_circular: e.target.checked})} />
-                                <span className="text-xs">Pulse Circular Interp</span>
+                                <span className="text-xs">{t.pulseCircularInterp}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <input type="checkbox" checked={newProduct.pulse_interp_fixed} onChange={(e) => setNewProduct({...newProduct, pulse_interp_fixed: e.target.checked})} />
-                                <span className="text-xs">Pulse Fixed L/A</span>
+                                <span className="text-xs">{t.pulseFixedLA}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <input type="checkbox" checked={newProduct.ethercat_interp_linear} onChange={(e) => setNewProduct({...newProduct, ethercat_interp_linear: e.target.checked})} />
-                                <span className="text-xs">ECAT Linear Interp</span>
+                                <span className="text-xs">{t.ecatLinearInterp}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <input type="checkbox" checked={newProduct.ethercat_interp_circular} onChange={(e) => setNewProduct({...newProduct, ethercat_interp_circular: e.target.checked})} />
-                                <span className="text-xs">ECAT Circular Interp</span>
+                                <span className="text-xs">{t.ecatCircularInterp}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <input type="checkbox" checked={newProduct.ethercat_interp_fixed} onChange={(e) => setNewProduct({...newProduct, ethercat_interp_fixed: e.target.checked})} />
-                                <span className="text-xs">ECAT Fixed L/A</span>
+                                <span className="text-xs">{t.ecatFixedLA}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <input type="checkbox" checked={newProduct.ethercat_interp_spiral} onChange={(e) => setNewProduct({...newProduct, ethercat_interp_spiral: e.target.checked})} />
-                                <span className="text-xs">EtherCAT SPIRAL</span>
+                                <span className="text-xs">{t.ecatSpiral}</span>
                               </div>
                             </div>
                           </div>
@@ -533,7 +549,7 @@ export default function App() {
                             disabled={loading}
                             className="w-full bg-[#141414] text-[#E4E3E0] py-4 font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all disabled:opacity-50"
                           >
-                            {loading ? "Adding..." : "Add Product to Database"}
+                            {loading ? t.processing : t.addProductToDb}
                           </button>
                         </form>
                       </motion.div>
@@ -554,8 +570,8 @@ export default function App() {
                     <CheckCircle2 size={24} />
                   </div>
                   <div>
-                    <h2 className="font-serif font-bold text-3xl">Match Results</h2>
-                    <p className="text-xs opacity-50">Found {results.length} models matching your specifications</p>
+                    <h2 className="font-serif font-bold text-3xl">{t.matchResults}</h2>
+                    <p className="text-xs opacity-50">{t.foundModels.replace('{count}', results.length.toString())}</p>
                   </div>
                 </div>
 
@@ -567,30 +583,30 @@ export default function App() {
                         <span className="text-[10px] font-mono border border-current px-2 py-0.5 rounded">PLC-UNIT</span>
                       </div>
                       <div className="space-y-1 text-xs font-mono opacity-70 group-hover:opacity-100">
-                        <div className="flex justify-between"><span>DIO:</span> <span>{product.dio}</span></div>
-                        <div className="flex justify-between"><span>AIO:</span> <span>{product.aio}</span></div>
-                        <div className="flex justify-between"><span>ECAT Real/Virtual:</span> <span>{product.ethercat_real_or_virtual_axes} Axes</span></div>
-                        <div className="flex justify-between"><span>ECAT Virtual:</span> <span>{product.ethercat_virtual_axes} Axes</span></div>
-                        <div className="flex justify-between"><span>HSC Points:</span> <span>{product.hsc_points}</span></div>
+                        <div className="flex justify-between"><span>{t.dio}:</span> <span>{product.dio}</span></div>
+                        <div className="flex justify-between"><span>{t.aio}:</span> <span>{product.aio}</span></div>
+                        <div className="flex justify-between"><span>{t.ecatRealVirtual}:</span> <span>{product.ethercat_real_or_virtual_axes} {t.axes}</span></div>
+                        <div className="flex justify-between"><span>{t.ecatVirtual}:</span> <span>{product.ethercat_virtual_axes} {t.axes}</span></div>
+                        <div className="flex justify-between"><span>{t.hscPoints}:</span> <span>{product.hsc_points}</span></div>
                       </div>
                     </div>
                   ))}
                 </div>
 
                 <div className="pt-8">
-                  <h3 className="text-[10px] uppercase font-bold opacity-50 tracking-widest mb-4">Detailed Parameter Comparison</h3>
-                  <ProductTable products={results} />
+                  <h3 className="text-[10px] uppercase font-bold opacity-50 tracking-widest mb-4">{t.detailedComparison}</h3>
+                  <ProductTable products={results} t={t} />
                   
                   {/* Notes Section */}
                   <div className="mt-8 p-6 border border-[#141414]/10 bg-white/20">
                     <h4 className="text-[10px] uppercase font-bold opacity-50 tracking-widest mb-4 flex items-center gap-2">
-                      <AlertCircle size={14} /> Notes
+                      <AlertCircle size={14} /> {t.notes}
                     </h4>
                     <ul className="space-y-2 text-[11px] opacity-70 leading-relaxed">
-                      <li>*1: MQ can expand an additional 8 points (4 axes) of high-speed counting or pulse output via 2 Plug-ins.</li>
-                      <li>*2: MQ can expand an additional 2 communication ports via 2 Plug-ins.</li>
-                      <li>*3: MQ only has 2 Plug-in expansion slots.</li>
-                      <li>*4: In ME/MS/MU models, half of the high-speed counters are dedicated for Motion use.</li>
+                      <li>{t.note1}</li>
+                      <li>{t.note2}</li>
+                      <li>{t.note3}</li>
+                      <li>{t.note4}</li>
                     </ul>
                   </div>
                 </div>
@@ -603,13 +619,53 @@ export default function App() {
                 className="h-full flex flex-col items-center justify-center opacity-20 text-center"
               >
                 <Search size={80} strokeWidth={1} />
-                <p className="font-serif font-bold text-2xl mt-4">Awaiting parameters...</p>
-                <p className="text-xs uppercase tracking-widest mt-2">Adjust filters to begin selection</p>
+                <p className="font-serif font-bold text-2xl mt-4">{t.awaitingParameters}</p>
+                <p className="text-xs uppercase tracking-widest mt-2">{t.adjustFilters}</p>
               </motion.div>
             )}
           </AnimatePresence>
         </section>
       </main>
+
+      {/* Language Selection Modal */}
+      <AnimatePresence>
+        {showLanguageModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-[#141414] z-[200] flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-center space-y-12"
+            >
+              <div className="space-y-4">
+                <h2 className="font-serif italic text-6xl text-[#E4E3E0]">MPLC Selector</h2>
+                <p className="text-[#E4E3E0]/40 uppercase tracking-[0.3em] text-xs">Industrial Control Selection System</p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <button 
+                  onClick={() => { setLanguage('en'); setShowLanguageModal(false); }}
+                  className="group relative px-12 py-6 border border-[#E4E3E0]/20 text-[#E4E3E0] hover:bg-[#E4E3E0] hover:text-[#141414] transition-all duration-500 overflow-hidden"
+                >
+                  <span className="relative z-10 font-serif italic text-2xl">English</span>
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#E4E3E0] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                </button>
+                <button 
+                  onClick={() => { setLanguage('cn'); setShowLanguageModal(false); }}
+                  className="group relative px-12 py-6 border border-[#E4E3E0]/20 text-[#E4E3E0] hover:bg-[#E4E3E0] hover:text-[#141414] transition-all duration-500 overflow-hidden"
+                >
+                  <span className="relative z-10 font-serif font-bold text-2xl">简体中文</span>
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#E4E3E0] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -651,22 +707,22 @@ function ToggleButton({ label, active, onClick }: { label: string, active: boole
   );
 }
 
-function ProductTable({ products }: { products: Product[] }) {
+function ProductTable({ products, t }: { products: Product[], t: any }) {
   return (
     <div className="border border-[#141414] overflow-x-auto">
       <table className="w-full text-left border-collapse min-w-[800px]">
         <thead>
           <tr className="bg-[#141414] text-[#E4E3E0]">
-            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">Product Model</th>
-            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">DIO</th>
-            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">AIO</th>
-            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">Serial</th>
-            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">HSC Points</th>
-            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">Pulse</th>
-            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">ECAT Real/Virtual</th>
-            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">ECAT Virtual</th>
-            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">E-CAM</th>
-            <th className="p-4 font-serif font-bold text-xs">Interpolation Support</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.productModel}</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.dio}</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.aio}</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.serial}</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.hscPoints}</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.pulse}</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.ecatRealVirtual}</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.ecatVirtual}</th>
+            <th className="p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.ecam}</th>
+            <th className="p-4 font-serif font-bold text-xs">{t.interpolationSupport}</th>
           </tr>
         </thead>
         <tbody>
@@ -683,13 +739,13 @@ function ProductTable({ products }: { products: Product[] }) {
               <td className="p-4 font-mono text-xs border-r border-[#141414]/10">{p.e_cam_axes}</td>
               <td className="p-4">
                 <div className="flex flex-wrap gap-1">
-                  {p.pulse_interp_linear && <StatusTag label="P-Linear" />}
-                  {p.pulse_interp_circular && <StatusTag label="P-Circular" />}
-                  {p.pulse_interp_fixed && <StatusTag label="P-Fixed L/A" />}
-                  {p.ethercat_interp_linear && <StatusTag label="E-Linear" variant="dark" />}
-                  {p.ethercat_interp_circular && <StatusTag label="E-Circular" variant="dark" />}
-                  {p.ethercat_interp_fixed && <StatusTag label="E-Fixed L/A" variant="dark" />}
-                  {p.ethercat_interp_spiral && <StatusTag label="E-3D Arc & Helix" variant="dark" />}
+                  {p.pulse_interp_linear && <StatusTag label={`P-${t.linear}`} />}
+                  {p.pulse_interp_circular && <StatusTag label={`P-${t.circular}`} />}
+                  {p.pulse_interp_fixed && <StatusTag label={`P-${t.fixedLA}`} />}
+                  {p.ethercat_interp_linear && <StatusTag label={`E-${t.linear}`} variant="dark" />}
+                  {p.ethercat_interp_circular && <StatusTag label={`E-${t.circular}`} variant="dark" />}
+                  {p.ethercat_interp_fixed && <StatusTag label={`E-${t.fixedLA}`} variant="dark" />}
+                  {p.ethercat_interp_spiral && <StatusTag label={`E-${t.spiral}`} variant="dark" />}
                 </div>
               </td>
             </tr>
