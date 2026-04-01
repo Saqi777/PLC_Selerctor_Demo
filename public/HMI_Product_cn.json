@@ -1,0 +1,332 @@
+[
+  {
+    "model": "C2043SA",
+    "size": "4.3",
+    "rs485": 1,
+    "serial": "COM1: RS-232;COM2: RS-422/485",
+    "ethernet": 0,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 528MHz / 128MB / 128MB",
+    "certification": ["CE"]
+    },
+    {
+    "model": "C2070SA",
+    "size": "7",
+    "rs485": 1,
+    "serial": "COM1: RS-232;COM2: RS-422/485",
+    "ethernet": 0,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 528MHz / 128MB / 128MB",
+    "certification": ["CE"]
+    },
+    {
+    "model": "C2070QA",
+    "size": "7",
+    "rs485": 1,
+    "serial": "COM1: RS-232;COM2: RS-422/485",
+    "ethernet": 0,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 528MHz / 128MB / 128MB",
+    "certification": ["CE"]
+    },
+    {
+    "model": "C2070NA",
+    "size": "7",
+    "rs485": 1,
+    "serial": "COM1: RS-232;COM2: RS-422/485",
+    "ethernet": 1,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 528MHz / 128MB / 128MB",
+    "certification": ["CE"]
+    },
+    {
+    "model": "C2101SA",
+    "size": "10.1",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM2: RS-422/485;COM3: 485",
+    "ethernet": 0,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 600MHz / 128MB / 128MB",
+    "certification": ["CE"]
+    },
+    {
+    "model": "C2101NA",
+    "size": "10.1",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM2: RS-422/485;COM3: 485",
+    "ethernet": 1,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 600MHz / 128MB / 128MB",
+    "certification": ["CE"]
+    },
+  {
+    "model": "P2043SA",
+    "size": "4.3",
+    "rs485": 1,
+    "serial": "COM1: RS-232;COM2: RS-422/485",
+    "ethernet": 0,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 600MHz / 128MB / 128MB",
+    "certification": ["CE"]
+  },
+  {
+    "model": "P2043NA",
+    "size": "4.3",
+    "rs485": 1,
+    "serial": "COM1: RS-232;COM2: RS-422/485",
+    "ethernet": 1,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 600MHz / 128MB / 128MB",
+    "certification": ["CE"]
+  },
+  {
+    "model": "P2070SA",
+    "size": "7",
+    "rs485": 1,
+    "serial": "COM1: RS-232;COM2: RS-422/485",
+    "ethernet": 0,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 600MHz / 128MB / 128MB",
+    "certification": ["CE"]
+  },
+  {
+    "model": "P2070NA",
+    "size": "7",
+    "rs485": 1,
+    "serial": "COM1: RS-232;COM2: RS-422/485",
+    "ethernet": 1,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 600MHz / 128MB / 128MB",
+    "certification": ["CE"]
+  },
+  {
+    "model": "P2101SA",
+    "size": "10.1",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM2: RS-422/485;COM3: 485",
+    "ethernet": 0,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 600MHz / 128MB / 128MB",
+    "certification": ["CE"]
+  },
+  {
+    "model": "P2101NA",
+    "size": "10.1",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM2: RS-422/485;COM3: 485",
+    "ethernet": 1,
+    "hardware_config": "Low",
+    "cpu_flash_ram": "32-bit 600MHz / 128MB / 128MB",
+    "certification": ["CE"]
+  },
+  {
+    "model": "P5043SA",
+    "size": "4.3",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM2: RS-422/485;COM3: RS-485",
+    "ethernet": 0,
+    "hardware_config": "High",
+    "cpu_flash_ram": "32-bit 600MHz / 256MB / 128MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5043SB",
+    "size": "4.3",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM2: RS-422/485;COM3: RS-485",
+    "ethernet": 0,
+    "hardware_config": "High",
+    "cpu_flash_ram": "32-bit 600MHz / 256MB / 128MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5043NA",
+    "size": "4.3",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM2: RS-422/485;COM3: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "32-bit 600MHz / 256MB / 128MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5043NB",
+    "size": "4.3",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM2: RS-422/485;COM3: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "32-bit 600MHz / 256MB / 128MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5070SB",
+    "size": "7",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 0,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5070SA",
+    "size": "7",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 0,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5070NA",
+    "size": "7",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5070NB",
+    "size": "7",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5070ZB",
+    "size": "7",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5070ZA",
+    "size": "7",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5070SB(R)",
+    "size": "7",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 0,
+    "hardware_config": "High",
+    "cpu_flash_ram": "32-bit 600MHz / 256MB / 128MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5070NB(R)",
+    "size": "7",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "32-bit 600MHz / 256MB / 128MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5101ZB",
+    "size": "10.1",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5101NB",
+    "size": "10.1",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5101SB",
+    "size": "10.1",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 0,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5101SA",
+    "size": "10.1",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 0,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5101NA",
+    "size": "10.1",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5101ZA",
+    "size": "10.1",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "64-bit 1GHz / 4GB / 512MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5120ZB",
+    "size": "12",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "32-bit 1GHz / 256MB / 256MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "P5150ZB",
+    "size": "15",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM3: RS-422/485;COM4: RS-485",
+    "ethernet": 1,
+    "hardware_config": "High",
+    "cpu_flash_ram": "32-bit 1GHz / 256MB / 256MB",
+    "certification": ["CE", "UL"]
+  },
+  {
+    "model": "U7070NA",
+    "size": "7",
+    "rs485": 2,
+    "serial": "COM1: RS-232;COM2: RS422/485;COM3: RS-485",
+    "ethernet": 2,
+    "hardware_config": "High",
+    "cpu_flash_ram": "32-bit 800MHz / 4GB / 1GB",
+    "certification": ["CE"]
+  }
+]

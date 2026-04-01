@@ -1,0 +1,18 @@
+[
+  {
+    "model": "SC301AAH00",
+    "power": "100W",
+    "control_method": ["EtherCAT"],
+    "input_voltage": ["220V"],
+    "motor_model": "MA6-010M3030A04B2N",
+    "encoder_bits": ["17bit"],
+    "encoder_type": ["磁性"],
+    "encoder_mode": ["绝对"],
+    "brake": false,
+    "flange_size": "40",
+    "power_cable": "LA6-PAN0F0-N1M□□",
+    "encoder_cable": "LA6-EHN03E-P3M□□",
+    "brake_cable": ""
+  }
+ 
+]
