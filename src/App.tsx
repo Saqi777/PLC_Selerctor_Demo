@@ -83,7 +83,7 @@ export default function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [language, setLanguage] = useState<Language | null>(null);
   const [showLanguageModal, setShowLanguageModal] = useState(true);
-  const [showCards, setShowCards] = useState(true);
+  const [showCards, setShowCards] = useState(false);
 
   // Reset filters when product type changes
   useEffect(() => {
@@ -101,11 +101,11 @@ export default function App() {
       try {
         let fileName = '';
         if (productType === 'MPLC') {
-          fileName = language === 'en' ? '/MPLC_Product_en.json' : '/MPLC_Product_cn.json';
+          fileName = (language === 'en' || language === 'tw') ? '/MPLC_Product_en.json' : '/MPLC_Product_cn.json';
         } else if (productType === 'HMI') {
-          fileName = language === 'en' ? '/HMI_Product_en.json' : '/HMI_Product_cn.json';
+          fileName = (language === 'en' || language === 'tw') ? '/HMI_Product_en.json' : '/HMI_Product_cn.json';
         } else if (productType === 'Servo') {
-          fileName = language === 'en' ? '/Servo_Product_en.json' : '/Servo_Product_cn.json';
+          fileName = (language === 'en' || language === 'tw') ? '/Servo_Product_en.json' : '/Servo_Product_cn.json';
         }
 
         const response = await fetch(fileName);
@@ -181,7 +181,7 @@ export default function App() {
           if (f.size && prod.size !== f.size) return false;
           if (f.rs485 && prod.rs485 < Number(f.rs485)) return false;
           if (f.ethernet && prod.ethernet < Number(f.ethernet)) return false;
-          if (f.hardware_config && prod.hardware_config !== f.hardware_config) return false;
+          if (f.hardware_config && !prod.cpu_flash_ram.includes(f.hardware_config)) return false;
           if (f.certification.length > 0) {
             if (!f.certification.every(c => prod.certification.includes(c))) return false;
           }
@@ -280,10 +280,14 @@ export default function App() {
             })}
           </div>
           <button 
-            onClick={() => setLanguage(language === 'en' ? 'cn' : 'en')}
+            onClick={() => {
+              if (language === 'en') setLanguage('cn');
+              else if (language === 'cn') setLanguage('tw');
+              else setLanguage('en');
+            }}
             className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border border-[#141414] px-3 sm:px-4 py-2 hover:bg-[#141414] hover:text-[#E4E3E0] transition-all"
           >
-            {language === 'en' ? t.chinese : t.english}
+            {language === 'en' ? t.chinese : language === 'cn' ? t.traditionalChinese : t.english}
           </button>
           <a 
             href="https://docs.google.com/spreadsheets/d/1JdLJxIjBiGuPtVtBH8CNRmlxwd6hz_AF0JzfUAWb0Go/edit?usp=sharing" 
@@ -464,17 +468,25 @@ export default function App() {
                 </div>
 
                 <div className="space-y-4">
-                  <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">{t.hmiHardware}</label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">{t.hmiHardware}</label>
+                    <span className="text-[9px] opacity-40 font-mono uppercase tracking-tighter">({t.hmiCpuFlashRam})</span>
+                  </div>
                   <div className="flex flex-col gap-2">
                     <ToggleButton 
-                      label={t.hmiHigh} 
-                      active={(filters as HMIFilterState).hardware_config === 'High'} 
-                      onClick={() => handleFilterChange('hardware_config', (filters as HMIFilterState).hardware_config === 'High' ? '' : 'High')} 
+                      label={t.hmiConfig1} 
+                      active={(filters as HMIFilterState).hardware_config === '600MHz / 128MB / 128MB'} 
+                      onClick={() => handleFilterChange('hardware_config', (filters as HMIFilterState).hardware_config === '600MHz / 128MB / 128MB' ? '' : '600MHz / 128MB / 128MB')} 
                     />
                     <ToggleButton 
-                      label={t.hmiLow} 
-                      active={(filters as HMIFilterState).hardware_config === 'Low'} 
-                      onClick={() => handleFilterChange('hardware_config', (filters as HMIFilterState).hardware_config === 'Low' ? '' : 'Low')} 
+                      label={t.hmiConfig2} 
+                      active={(filters as HMIFilterState).hardware_config === '600MHz / 256MB / 128MB'} 
+                      onClick={() => handleFilterChange('hardware_config', (filters as HMIFilterState).hardware_config === '600MHz / 256MB / 128MB' ? '' : '600MHz / 256MB / 128MB')} 
+                    />
+                    <ToggleButton 
+                      label={t.hmiConfig3} 
+                      active={(filters as HMIFilterState).hardware_config === '1GHz / 4GB / 512MB'} 
+                      onClick={() => handleFilterChange('hardware_config', (filters as HMIFilterState).hardware_config === '1GHz / 4GB / 512MB' ? '' : '1GHz / 4GB / 512MB')} 
                     />
                     <p className="text-[9px] opacity-50 italic">{t.hmiNote}</p>
                   </div>
@@ -662,7 +674,7 @@ export default function App() {
                                   <div className="flex justify-between"><span>{t.hmiSize}:</span> <span>{(product as HMIProduct).size}"</span></div>
                                   <div className="flex justify-between"><span>RS485:</span> <span>{(product as HMIProduct).rs485}</span></div>
                                   <div className="flex justify-between"><span>Ethernet:</span> <span>{(product as HMIProduct).ethernet}</span></div>
-                                  <div className="flex justify-between"><span>{t.hmiHardware}:</span> <span>{(product as HMIProduct).hardware_config}</span></div>
+                                  <div className="flex justify-between"><span>{t.hmiCpuFlashRam}:</span> <span className="text-right">{(product as HMIProduct).cpu_flash_ram}</span></div>
                                 </>
                               )}
                               {productType === 'Servo' && (product as ServoProduct).control_method !== undefined && (
@@ -747,16 +759,23 @@ export default function App() {
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
                 <button 
                   onClick={() => { setLanguage('en'); setShowLanguageModal(false); }}
-                  className="group relative px-12 py-6 border border-[#E4E3E0]/20 text-[#E4E3E0] hover:bg-[#E4E3E0] hover:text-[#141414] transition-all duration-500 overflow-hidden"
+                  className="group relative px-8 py-6 border border-[#E4E3E0]/20 text-[#E4E3E0] hover:bg-[#E4E3E0] hover:text-[#141414] transition-all duration-500 overflow-hidden"
                 >
                   <span className="relative z-10 font-serif italic text-2xl">English</span>
                   <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#E4E3E0] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                 </button>
                 <button 
                   onClick={() => { setLanguage('cn'); setShowLanguageModal(false); }}
-                  className="group relative px-12 py-6 border border-[#E4E3E0]/20 text-[#E4E3E0] hover:bg-[#E4E3E0] hover:text-[#141414] transition-all duration-500 overflow-hidden"
+                  className="group relative px-8 py-6 border border-[#E4E3E0]/20 text-[#E4E3E0] hover:bg-[#E4E3E0] hover:text-[#141414] transition-all duration-500 overflow-hidden"
                 >
                   <span className="relative z-10 font-serif font-bold text-2xl">简体中文</span>
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#E4E3E0] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                </button>
+                <button 
+                  onClick={() => { setLanguage('tw'); setShowLanguageModal(false); }}
+                  className="group relative px-8 py-6 border border-[#E4E3E0]/20 text-[#E4E3E0] hover:bg-[#E4E3E0] hover:text-[#141414] transition-all duration-500 overflow-hidden"
+                >
+                  <span className="relative z-10 font-serif font-bold text-2xl">繁體中文</span>
                   <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#E4E3E0] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                 </button>
               </div>
