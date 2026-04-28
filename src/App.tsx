@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { 
   Settings, 
   Search, 
@@ -93,39 +94,72 @@ export default function App() {
     setResults([]);
   }, [productType]);
 
-  // Load products from JSON on mount or language/productType change
+  // Load products from Excel on mount or language/productType change
   useEffect(() => {
     if (!language) return;
     
     const loadData = async () => {
       try {
-        let fileName = '';
-        if (productType === 'MPLC') {
-          fileName = (language === 'en' || language === 'tw') ? '/MPLC_Product_en.json' : '/MPLC_Product_cn.json';
-        } else if (productType === 'HMI') {
-          fileName = (language === 'en' || language === 'tw') ? '/HMI_Product_en.json' : '/HMI_Product_cn.json';
-        } else if (productType === 'Servo') {
-          fileName = (language === 'en' || language === 'tw') ? '/Servo_Product_en.json' : '/Servo_Product_cn.json';
-        }
+        setLoading(true);
+        const excelFile = (language === 'en' || language === 'tw') 
+          ? '/Product_Database_cht_en.xlsx' 
+          : '/Product_Database_cn.xlsx';
 
-        const response = await fetch(fileName);
-        if (!response.ok) throw new Error("File not found");
-        const data = await response.json();
+        const response = await fetch(excelFile);
+        if (!response.ok) throw new Error("Excel file not found");
+        const arrayBuffer = await response.arrayBuffer();
+        const dataBuffer = new Uint8Array(arrayBuffer);
+        const workbook = XLSX.read(dataBuffer, { type: 'array' });
+        
+        // Sheets are ordered: MPLC, HMI, Servo
+        const sheetIndex = productType === 'MPLC' ? 0 : productType === 'HMI' ? 1 : 2;
+        const sheetName = workbook.SheetNames[sheetIndex];
+        if (!sheetName) throw new Error("Sheet not found");
+        
+        const worksheet = workbook.Sheets[sheetName];
+        const rawData = XLSX.utils.sheet_to_json(worksheet);
         
         // Add IDs and normalize data
-        const normalizedData = data.map((p: any, index: number) => {
-          const base = { ...p, id: p.id || index + 1 };
+        const normalizedData = rawData.map((row: any, index: number) => {
+          const base = { ...row, id: row.id || index + 1 };
+          
           if (productType === 'MPLC') {
+            const parseBool = (val: any) => val === true || val === 'TRUE' || val === 'Yes' || val === 1 || val === '1';
             return {
               ...base,
-              pulse_interp_linear: !!p.pulse_interp_linear,
-              pulse_interp_circular: !!p.pulse_interp_circular,
-              pulse_interp_fixed: !!p.pulse_interp_fixed,
-              ethercat_interp_linear: !!p.ethercat_interp_linear,
-              ethercat_interp_circular: !!p.ethercat_interp_circular,
-              ethercat_interp_fixed: !!p.ethercat_interp_fixed,
-              ethercat_interp_spiral: !!p.ethercat_interp_spiral,
-              hsc_points: p.hsc_points || 0,
+              dio: Number(row.dio) || 0,
+              aio: Number(row.aio) || 0,
+              serial_ports: Number(row.serial_ports) || 0,
+              pulse_axes: Number(row.pulse_axes) || 0,
+              ethercat_real_or_virtual_axes: Number(row.ethercat_real_or_virtual_axes) || 0,
+              ethercat_virtual_axes: Number(row.ethercat_virtual_axes) || 0,
+              pulse_interp_linear: parseBool(row.pulse_interp_linear),
+              pulse_interp_circular: parseBool(row.pulse_interp_circular),
+              pulse_interp_fixed: parseBool(row.pulse_interp_fixed),
+              ethercat_interp_linear: parseBool(row.ethercat_interp_linear),
+              ethercat_interp_circular: parseBool(row.ethercat_interp_circular),
+              ethercat_interp_fixed: parseBool(row.ethercat_interp_fixed),
+              ethercat_interp_spiral: parseBool(row.ethercat_interp_spiral),
+              hsc_points: row.hsc_points || 0,
+            };
+          } else if (productType === 'HMI') {
+            return {
+              ...base,
+              rs485: Number(row.rs485) || 0,
+              ethernet: Number(row.ethernet) || 0,
+              certification: typeof row.certification === 'string' ? row.certification.split(',').map((s: string) => s.trim()) : (Array.isArray(row.certification) ? row.certification : []),
+            };
+          } else if (productType === 'Servo') {
+            const parseBool = (val: any) => val === true || val === 'TRUE' || val === 'Yes' || val === 1 || val === '1';
+            const splitStr = (val: any) => typeof val === 'string' ? val.split(',').map((s: string) => s.trim()) : (Array.isArray(val) ? val : []);
+            return {
+              ...base,
+              control_method: splitStr(row.control_method),
+              input_voltage: splitStr(row.input_voltage),
+              encoder_bits: splitStr(row.encoder_bits),
+              encoder_type: splitStr(row.encoder_type),
+              encoder_mode: splitStr(row.encoder_mode),
+              brake: parseBool(row.brake),
             };
           }
           return base;
@@ -133,9 +167,11 @@ export default function App() {
         
         setAllProducts(normalizedData);
         setResults([]);
+        setLoading(false);
       } catch (error) {
-        console.error("Failed to load product data:", error);
+        console.error("Failed to load product data from Excel:", error);
         setAllProducts([]);
+        setLoading(false);
       }
     };
     loadData();
@@ -210,7 +246,7 @@ export default function App() {
   };
 
   const handleSync = () => {
-    alert("In Vercel deployment, data is loaded statically from MPLC_Product_en.json. To update, please modify the JSON file in the repository.");
+    alert(`Data is loaded statically from Excel. To update, please modify the Excel files in the public folder.`);
   };
 
   const handleSaveToJson = () => {
@@ -592,7 +628,7 @@ export default function App() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                   <div>
                     <h2 className="font-serif font-bold text-3xl">{t.masterDatabase}</h2>
-                    <p className="text-xs opacity-50 mt-1">{t.fullAccess} (Source: public/MPLC_Product_{language}.json)</p>
+                    <p className="text-xs opacity-50 mt-1">{t.fullAccess} (Source: public/Product_Database_{(language === 'en' || language === 'tw') ? 'cht_en' : 'cn'}.xlsx)</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button 
