@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { read, utils } from 'xlsx';
 import { 
   Settings, 
   Search, 
@@ -78,7 +77,6 @@ export default function App() {
 
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [dataError, setDataError] = useState<string | null>(null);
   const [adminMode, setAdminMode] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -95,117 +93,49 @@ export default function App() {
     setResults([]);
   }, [productType]);
 
-  // Load products from Excel on mount or language/productType change
+  // Load products from JSON on mount or language/productType change
   useEffect(() => {
     if (!language) return;
     
     const loadData = async () => {
       try {
-        setLoading(true);
-        setDataError(null);
-        const excelFile = (language === 'en' || language === 'tw') 
-          ? '/Product_Database_cht_en.xlsx' 
-          : '/Product_Database_cn.xlsx';
-
-        console.log(`Fetching Excel data from: ${excelFile} for ${productType}`);
-        const response = await fetch(excelFile);
-        if (!response.ok) {
-          throw new Error(`Excel file not found at ${excelFile} (Status: ${response.status})`);
-        }
-        
-        const arrayBuffer = await response.arrayBuffer();
-        if (arrayBuffer.byteLength === 0) {
-          throw new Error("Excel file is empty");
-        }
-        
-        const dataBuffer = new Uint8Array(arrayBuffer);
-        const workbook = read(dataBuffer, { type: 'array' });
-        
-        // Find sheet by name or fallback to index
-        // Names according to user: MPLC, HMI, Servo
-        const possibleNames = productType === 'MPLC' ? ['MPLC', 'Sheet1'] : 
-                              productType === 'HMI' ? ['HMI', 'Sheet2'] : 
-                              ['Servo', 'Sheet3'];
-        
-        let sheetName = workbook.SheetNames.find(name => 
-          possibleNames.some(p => name.toLowerCase().includes(p.toLowerCase()))
-        );
-
-        // Fallback to index if name match fails
-        if (!sheetName) {
-          const sheetIndex = productType === 'MPLC' ? 0 : productType === 'HMI' ? 1 : 2;
-          sheetName = workbook.SheetNames[sheetIndex];
+        let fileName = '';
+        if (productType === 'MPLC') {
+          fileName = (language === 'en' || language === 'tw') ? '/MPLC_Product_en.json' : '/MPLC_Product_cn.json';
+        } else if (productType === 'HMI') {
+          fileName = (language === 'en' || language === 'tw') ? '/HMI_Product_en.json' : '/HMI_Product_cn.json';
+        } else if (productType === 'Servo') {
+          fileName = (language === 'en' || language === 'tw') ? '/Servo_Product_en.json' : '/Servo_Product_cn.json';
         }
 
-        if (!sheetName) {
-          throw new Error(`Sheet for ${productType} not found in Excel file. Available sheets: ${workbook.SheetNames.join(', ')}`);
-        }
+        const response = await fetch(fileName);
+        if (!response.ok) throw new Error("File not found");
+        const data = await response.json();
         
-        const worksheet = workbook.Sheets[sheetName];
-        const rawData = utils.sheet_to_json(worksheet);
-        
-        if (!rawData || rawData.length === 0) {
-          console.warn(`No data found in sheet: ${sheetName}`);
-        }
-
         // Add IDs and normalize data
-        const normalizedData = rawData.map((row: any, index: number) => {
-          const base = { ...row, id: row.id || index + 1 };
-          
+        const normalizedData = data.map((p: any, index: number) => {
+          const base = { ...p, id: p.id || index + 1 };
           if (productType === 'MPLC') {
-            const parseBool = (val: any) => val === true || val === 'TRUE' || val === 'Yes' || val === 1 || val === '1' || String(val).toLowerCase() === 'true';
             return {
               ...base,
-              dio: Number(row.dio ?? row['DIO']) || 0,
-              aio: Number(row.aio ?? row['AIO']) || 0,
-              serial_ports: Number(row.serial_ports ?? row['Serial']) || 0,
-              pulse_axes: Number(row.pulse_axes ?? row['Pulse']) || 0,
-              ethercat_real_or_virtual_axes: Number(row.ethercat_real_or_virtual_axes ?? row['ECAT Real/Virtual']) || 0,
-              ethercat_virtual_axes: Number(row.ethercat_virtual_axes ?? row['ECAT Virtual']) || 0,
-              pulse_interp_linear: parseBool(row.pulse_interp_linear),
-              pulse_interp_circular: parseBool(row.pulse_interp_circular),
-              pulse_interp_fixed: parseBool(row.pulse_interp_fixed),
-              ethercat_interp_linear: parseBool(row.ethercat_interp_linear),
-              ethercat_interp_circular: parseBool(row.ethercat_interp_circular),
-              ethercat_interp_fixed: parseBool(row.ethercat_interp_fixed),
-              ethercat_interp_spiral: parseBool(row.ethercat_interp_spiral),
-              hsc_points: row.hsc_points ?? row['HSC Points'] ?? 0,
-            };
-          } else if (productType === 'HMI') {
-            return {
-              ...base,
-              rs485: Number(row.rs485 ?? row['RS485']) || 0,
-              ethernet: Number(row.ethernet ?? row['Ethernet']) || 0,
-              hardware_config: row.hardware_config ?? row['Hardware Config'] ?? row['CPU / Flash / RAM'] ?? '',
-              certification: typeof (row.certification ?? row['Certification']) === 'string' 
-                ? (row.certification ?? row['Certification']).split(',').map((s: string) => s.trim()) 
-                : (Array.isArray(row.certification ?? row['Certification']) ? (row.certification ?? row['Certification']) : []),
-            };
-          } else if (productType === 'Servo') {
-            const parseBool = (val: any) => val === true || val === 'TRUE' || val === 'Yes' || val === 1 || val === '1' || String(val).toLowerCase() === 'true';
-            const splitStr = (val: any) => typeof val === 'string' ? val.split(',').map((s: string) => s.trim()) : (Array.isArray(val) ? val : []);
-            return {
-              ...base,
-              control_method: splitStr(row.control_method),
-              input_voltage: splitStr(row.input_voltage),
-              encoder_bits: splitStr(row.encoder_bits),
-              encoder_type: splitStr(row.encoder_type),
-              encoder_mode: splitStr(row.encoder_mode),
-              brake: parseBool(row.brake),
+              pulse_interp_linear: !!p.pulse_interp_linear,
+              pulse_interp_circular: !!p.pulse_interp_circular,
+              pulse_interp_fixed: !!p.pulse_interp_fixed,
+              ethercat_interp_linear: !!p.ethercat_interp_linear,
+              ethercat_interp_circular: !!p.ethercat_interp_circular,
+              ethercat_interp_fixed: !!p.ethercat_interp_fixed,
+              ethercat_interp_spiral: !!p.ethercat_interp_spiral,
+              hsc_points: p.hsc_points || 0,
             };
           }
           return base;
         });
         
-        console.log(`Successfully loaded ${normalizedData.length} ${productType} products`);
         setAllProducts(normalizedData);
         setResults([]);
-        setLoading(false);
-      } catch (error: any) {
-        console.error("Failed to load product data from Excel:", error);
-        setDataError(error.message || "Unknown error loading data");
+      } catch (error) {
+        console.error("Failed to load product data:", error);
         setAllProducts([]);
-        setLoading(false);
       }
     };
     loadData();
@@ -280,7 +210,7 @@ export default function App() {
   };
 
   const handleSync = () => {
-    alert(`Data is loaded statically from Excel. To update, please modify the Excel files in the public folder.`);
+    alert("In Vercel deployment, data is loaded statically from MPLC_Product_en.json. To update, please modify the JSON file in the repository.");
   };
 
   const handleSaveToJson = () => {
@@ -637,34 +567,19 @@ export default function App() {
               </>
             )}
 
-            <div className="sticky bottom-0 left-0 right-0 p-4 bg-[#E4E3E0] border-t border-[#141414] lg:static lg:p-0 lg:border-t-0 -mx-4 md:-mx-8 lg:mx-0 mt-8">
-              <button 
-                onClick={executeSearch}
-                disabled={loading}
-                className="w-full bg-[#141414] text-[#E4E3E0] py-4 font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#141414]/90 transition-all disabled:opacity-50 shadow-2xl lg:shadow-none"
-              >
-                {loading ? t.processing : t.confirmSelection}
-                <ChevronRight size={18} />
-              </button>
-            </div>
+            <button 
+              onClick={executeSearch}
+              disabled={loading}
+              className="w-full bg-[#141414] text-[#E4E3E0] py-4 font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#141414]/90 transition-all disabled:opacity-50"
+            >
+              {loading ? t.processing : t.confirmSelection}
+              <ChevronRight size={18} />
+            </button>
           </div>
         </aside>
 
         {/* Results Area */}
         <section className="p-4 md:p-8 overflow-y-auto">
-          {dataError && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 mb-8 text-center">
-              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-red-500 mb-2">{t.errorLoadingData}</h3>
-              <p className="text-gray-400 mb-4 font-mono text-xs">{dataError}</p>
-              <button 
-                onClick={() => window.location.reload()}
-                className="px-6 py-2 bg-[#141414] text-[#E4E3E0] font-bold uppercase tracking-widest hover:bg-[#141414]/90 transition-all"
-              >
-                {t.retry}
-              </button>
-            </div>
-          )}
           <AnimatePresence mode="wait">
             {adminMode ? (
               <motion.div 
@@ -677,7 +592,7 @@ export default function App() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                   <div>
                     <h2 className="font-serif font-bold text-3xl">{t.masterDatabase}</h2>
-                    <p className="text-xs opacity-50 mt-1">{t.fullAccess} (Source: public/Product_Database_{(language === 'en' || language === 'tw') ? 'cht_en' : 'cn'}.xlsx)</p>
+                    <p className="text-xs opacity-50 mt-1">{t.fullAccess} (Source: public/MPLC_Product_{language}.json)</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button 

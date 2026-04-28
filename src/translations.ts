@@ -100,8 +100,6 @@ export const translations = {
     incremental: "Incremental",
     servoPulse: "Pulse",
     ethercat: "EtherCAT",
-    errorLoadingData: "Error Loading Data",
-    retry: "Retry",
     servoNoteText: "Multi-turn motors support both 【Absolute】 and 【Incremental】 control types. \n【Absolute control】 is achieved by combining with 【Absolute encoder cable】. \n【Incremental control】 is implemented by pairing with 【Incremental encoder cable】. \n□□: cable length 03=3m; 05=5m; 10=10m"
   },
   cn: {
@@ -205,8 +203,6 @@ export const translations = {
     incremental: "增量",
     servoPulse: "脉冲",
     ethercat: "EtherCAT",
-    errorLoadingData: "数据加载失败",
-    retry: "重试",
     servoNoteText: "多圈电机支持【绝对】和【增量】两种控制类型。\n【绝对控制】需配合【绝对编码器线缆】实现。\n【增量控制】需配合【增量编码器线缆】实现。\n□□:线缆长度 03=3m; 05=5m; 10=10m"
   },
   tw: {
@@ -310,8 +306,6 @@ export const translations = {
     incremental: "增量",
     servoPulse: "脈衝",
     ethercat: "EtherCAT",
-    errorLoadingData: "資料載入失敗",
-    retry: "重試",
     servoNoteText: "多圈電機支持【絕對】和【增量】兩種控制類型。\n【絕對控制】需配合【絕對編碼器線纜】實現。\n【增量控制】需配合【增量編碼器線纜】實現。\n□□:線纜長度 03=3m; 05=5m; 10=10m"
   }
 };
