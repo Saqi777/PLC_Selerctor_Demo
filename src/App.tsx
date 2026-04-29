@@ -59,6 +59,8 @@ const INITIAL_HMI_FILTERS: HMIFilterState = {
   ethernet: "",
   hardware_config: "",
   certification: [],
+  opc_ua: "",
+  sql: "",
 };
 
 const INITIAL_SERVO_FILTERS: ServoFilterState = {
@@ -185,6 +187,8 @@ export default function App() {
           if (f.certification.length > 0) {
             if (!f.certification.every(c => prod.certification.includes(c))) return false;
           }
+          if (f.opc_ua && prod.opc_ua !== f.opc_ua) return false;
+          if (f.sql && prod.sql !== f.sql) return false;
         } else if (productType === 'Servo') {
           const f = filters as ServoFilterState;
           const prod = p as ServoProduct;
@@ -508,6 +512,22 @@ export default function App() {
                     ))}
                   </div>
                 </div>
+
+                <div className="space-y-4">
+                  <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">{t.featuresSupport}</label>
+                  <div className="flex flex-wrap gap-2">
+                    <ToggleButton 
+                      label={t.hmiOpcUa} 
+                      active={(filters as HMIFilterState).opc_ua === 'YES'} 
+                      onClick={() => handleFilterChange('opc_ua', (filters as HMIFilterState).opc_ua === 'YES' ? '' : 'YES')} 
+                    />
+                    <ToggleButton 
+                      label={t.hmiSql} 
+                      active={(filters as HMIFilterState).sql === 'YES'} 
+                      onClick={() => handleFilterChange('sql', (filters as HMIFilterState).sql === 'YES' ? '' : 'YES')} 
+                    />
+                  </div>
+                </div>
               </>
             )}
 
@@ -674,6 +694,7 @@ export default function App() {
                                   <div className="flex justify-between"><span>{t.hmiSize}:</span> <span>{(product as HMIProduct).size}"</span></div>
                                   <div className="flex justify-between"><span>RS485:</span> <span>{(product as HMIProduct).rs485}</span></div>
                                   <div className="flex justify-between"><span>Ethernet:</span> <span>{(product as HMIProduct).ethernet}</span></div>
+                                  <div className="flex justify-between"><span>{t.hmiOpcUa}/{t.hmiSql}:</span> <span>{(product as HMIProduct).opc_ua}/{(product as HMIProduct).sql}</span></div>
                                   <div className="flex justify-between"><span>{t.hmiCpuFlashRam}:</span> <span className="text-right">{(product as HMIProduct).cpu_flash_ram}</span></div>
                                 </>
                               )}
@@ -911,7 +932,7 @@ function ProductTable({ products, t, type }: { products: Product[], t: any, type
     const hmiProducts = products as HMIProduct[];
     return (
       <div className="border border-[#141414] overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[1000px]">
+        <table className="w-full text-left border-collapse min-w-[1200px]">
           <thead>
             <tr className="bg-[#141414] text-[#E4E3E0]">
               <th className="p-2 md:p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.productModel}</th>
@@ -921,6 +942,8 @@ function ProductTable({ products, t, type }: { products: Product[], t: any, type
               <th className="p-2 md:p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">Ethernet</th>
               <th className="p-2 md:p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.hmiHardware}</th>
               <th className="p-2 md:p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.hmiCpuFlashRam}</th>
+              <th className="p-2 md:p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.hmiOpcUa}</th>
+              <th className="p-2 md:p-4 font-serif font-bold text-xs border-r border-[#E4E3E0]/20">{t.hmiSql}</th>
               <th className="p-2 md:p-4 font-serif font-bold text-xs">{t.hmiCert}</th>
             </tr>
           </thead>
@@ -934,6 +957,8 @@ function ProductTable({ products, t, type }: { products: Product[], t: any, type
                 <td className="p-2 md:p-4 font-mono text-xs border-r border-[#141414]/10">{p.ethernet}</td>
                 <td className="p-2 md:p-4 font-mono text-xs border-r border-[#141414]/10">{p.hardware_config === 'High' ? t.hmiHigh : t.hmiLow}</td>
                 <td className="p-2 md:p-4 font-mono text-[10px] border-r border-[#141414]/10">{p.cpu_flash_ram}</td>
+                <td className="p-2 md:p-4 font-mono text-xs border-r border-[#141414]/10">{p.opc_ua}</td>
+                <td className="p-2 md:p-4 font-mono text-xs border-r border-[#141414]/10">{p.sql}</td>
                 <td className="p-2 md:p-4">
                   <div className="flex flex-wrap gap-1">
                     {p.certification?.map(c => <StatusTag key={c} label={c} />)}

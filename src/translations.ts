@@ -78,6 +78,8 @@ export const translations = {
     hmiNoteText: "*If UL certification is required, please note it when placing an order.\n*Z models support Micro-SD slot\n*B series has a larger screen-to-body ratio compared to A series",
     hmiSerial: "Serial",
     hmiCpuFlashRam: "CPU / Flash / RAM",
+    hmiOpcUa: "OPC UA",
+    hmiSql: "SQL",
     // Servo
     servoPower: "Power",
     servoModel: "Servo Model",
@@ -181,6 +183,8 @@ export const translations = {
     hmiNoteText: "如需UL认证，下单时备注\n*Z机型支持Micro-SD 插槽\n*B系列相比A系列屏幕占比例更大",
     hmiSerial: "串口",
     hmiCpuFlashRam: "CPU / Flash / RAM",
+    hmiOpcUa: "OPC UA",
+    hmiSql: "SQL",
     // Servo
     servoPower: "功率",
     servoModel: "伺服型号",
@@ -284,6 +288,8 @@ export const translations = {
     hmiNoteText: "如需 UL 認證，下單時備註\n*Z 機型支持 Micro-SD 插槽\n*B 系列相比 A 系列屏幕佔比例更大",
     hmiSerial: "串口",
     hmiCpuFlashRam: "CPU / Flash / RAM",
+    hmiOpcUa: "OPC UA",
+    hmiSql: "SQL",
     // Servo
     servoPower: "功率",
     servoModel: "伺服型號",

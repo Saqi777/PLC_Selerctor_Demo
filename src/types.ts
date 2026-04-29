@@ -30,6 +30,8 @@ export interface HMIProduct {
   hardware_config: 'High' | 'Low'; // 高配/低配
   cpu_flash_ram: string; // 32-bit 528MHz / 128MB / 128MB
   certification: string[]; // CE/UL
+  opc_ua?: string; // YES/NO
+  sql?: string; // YES/NO
 }
 
 export interface ServoProduct {
@@ -74,6 +76,8 @@ export interface HMIFilterState {
   ethernet: number | "";
   hardware_config: string;
   certification: string[];
+  opc_ua: string;
+  sql: string;
 }
 
 export interface ServoFilterState {
