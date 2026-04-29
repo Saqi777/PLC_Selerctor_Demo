@@ -181,8 +181,8 @@ export default function App() {
           const f = filters as HMIFilterState;
           const prod = p as HMIProduct;
           if (f.size && prod.size !== f.size) return false;
-          if (f.rs485 && prod.rs485 < Number(f.rs485)) return false;
-          if (f.ethernet && prod.ethernet < Number(f.ethernet)) return false;
+          if (f.rs485 !== "" && prod.rs485 !== Number(f.rs485)) return false;
+          if (f.ethernet !== "" && prod.ethernet !== Number(f.ethernet)) return false;
           if (f.hardware_config && !prod.cpu_flash_ram.includes(f.hardware_config)) return false;
           if (f.certification.length > 0) {
             if (!f.certification.every(c => prod.certification.includes(c))) return false;
@@ -446,7 +446,7 @@ export default function App() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">RS485 (Min)</label>
+                    <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">RS485</label>
                     <select 
                       value={(filters as HMIFilterState).rs485} 
                       onChange={(e) => handleFilterChange('rs485', e.target.value ? Number(e.target.value) : "")}
@@ -458,7 +458,7 @@ export default function App() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">Ethernet (Min)</label>
+                    <label className="text-[10px] uppercase font-bold opacity-50 tracking-widest block">Ethernet</label>
                     <select 
                       value={(filters as HMIFilterState).ethernet} 
                       onChange={(e) => handleFilterChange('ethernet', e.target.value ? Number(e.target.value) : "")}
@@ -467,6 +467,7 @@ export default function App() {
                       <option value="">{t.any}</option>
                       <option value="0">0</option>
                       <option value="1">1</option>
+                      <option value="2">2</option>
                     </select>
                   </div>
                 </div>
@@ -1031,6 +1032,7 @@ function ProductTable({ products, t, type }: { products: Product[], t: any, type
   return null;
 }
 
+// thisonetga
 function StatusTag({ label, variant = 'light' }: { label: string, variant?: 'light' | 'dark' }) {
   return (
     <span className={cn(
